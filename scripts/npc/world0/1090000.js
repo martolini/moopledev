@@ -1,8 +1,8 @@
 /*
-	This file is part of the OdinMS Maple Story Server
+    This file is part of the OdinMS Maple Story Server
     Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-		       Matthias Butz <matze@odinms.de>
-		       Jan Christian Meyer <vimes@odinms.de>
+               Matthias Butz <matze@odinms.de>
+               Jan Christian Meyer <vimes@odinms.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
@@ -55,7 +55,6 @@ function start() {
 function action(mode, type, selection) {
     if (mode == 1) {
         status++;
-        cm.sendOk("status = " + status);
         if (status == 1)
             cm.sendNextPrev("It is an important and final choice. You will not be able to turn back.");
         else if (status == 2)
@@ -87,7 +86,6 @@ function action(mode, type, selection) {
         cm.sendOk("Come back once you have thought about it some more.");
         cm.dispose();
     }  else {
-        cm.sendOk("Mode is not 0 or 1");
         cm.dispose();
     }
 }
