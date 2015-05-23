@@ -25,7 +25,7 @@
 */
 
 var status = 0;
-var job = 510;
+var job = 520;
 var jobName = "Gunslinger";
 
 function start() {
@@ -73,7 +73,7 @@ function action(mode, type, selection) {
         else if (status == 13) {
             if (selection == 1) {
                 jobName = "Brawler";
-                job = 520;
+                job = 510;
             }
             cm.sendYesNo("Do you want to become a #r" + jobName + "#k?");
         } else if (status == 14) {

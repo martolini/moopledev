@@ -1,8 +1,8 @@
 /*
-	This file is part of the OdinMS Maple Story Server
+    This file is part of the OdinMS Maple Story Server
     Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-		       Matthias Butz <matze@odinms.de>
-		       Jan Christian Meyer <vimes@odinms.de>
+               Matthias Butz <matze@odinms.de>
+               Jan Christian Meyer <vimes@odinms.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
@@ -25,7 +25,7 @@
 */
 
 var status = 0;
-var job = 510;
+var job = 520;
 var jobName = "Gunslinger";
 
 function start() {
@@ -38,22 +38,22 @@ function start() {
         }
     } else {
         if (cm.getLevel() >= 30 && cm.getJobId() == 500) {
-            cm.sendNext("The progress you have made is astonishing."); }
-        // } else if (cm.getLevel() >= 70 && (cm.getJobId() == 510 || cm.getJobId() == 520))
-        //     cm.sendOk("Please go visit #bArec#k. He resides in #bEl Nath#k.");
-        // else if (cm.getLevel() < 30 && cm.getJobId() == 500)
-        //     cm.sendOk("Please come back to see me once you have trained more.");
-        // else if (cm.getLevel() >= 120 && cm.getJobId() > 510 && cm.getJobId()%10 == 1)
-        //     cm.sendOk("Please go visit the 4th job advancement person.");
-        // else
-        //     cm.sendOk("Please let me down...");
-        cm.dispose();
+            status = 10;
+            cm.sendNext("The progress you have made is astonishing");
+        } else if (cm.getLevel() >= 70 && (cm.getJobId() == 510 || cm.getJobId() == 520))
+            cm.sendOk("Please go visit #bArec#k. He resides in #bEl Nath#k.");
+        else if (cm.getLevel() < 30 && cm.getJobId() == 500)
+            cm.sendOk("Please come back to see me once you have trained more.");
+        else if (cm.getLevel() >= 120 && cm.getJobId() > 510 && cm.getJobId()%10 == 1)
+            cm.sendOk("Please go visit the 4th job advancement person.");
+        else
+            cm.sendOk("Please let me down...");
     }
 }
 
 function action(mode, type, selection) {
+    status++;
     if (mode == 1) {
-        status++;
         if (status == 1)
             cm.sendNextPrev("It is an important and final choice. You will not be able to turn back.");
         else if (status == 2)
@@ -73,7 +73,7 @@ function action(mode, type, selection) {
         else if (status == 13) {
             if (selection == 1) {
                 jobName = "Brawler";
-                job = 520;
+                job = 510;
             }
             cm.sendYesNo("Do you want to become a #r" + jobName + "#k?");
         } else if (status == 14) {
