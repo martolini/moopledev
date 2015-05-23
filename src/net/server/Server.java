@@ -553,8 +553,12 @@ public class Server implements Runnable {
                 worldRecommendedList = null;
 
                 System.out.println("Worlds + Channels are offline.");
-                acceptor.unbind();
-                acceptor = null;
+                try {
+                    acceptor.unbind();
+                    acceptor = null;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 if (!restart) {
                     System.exit(0);
                 } else {
@@ -562,6 +566,7 @@ public class Server implements Runnable {
                     try {
                         instance.finalize();//FUU I CAN AND IT'S FREE
                     } catch (Throwable ex) {
+                        ex.printStackTrace();
                     }
                     instance = null;
                     System.gc();
