@@ -48,6 +48,7 @@ function start() {
             cm.sendOk("Please go visit the 4th job advancement person.");
         else
             cm.sendOk("Please let me down...");
+        cm.dispose();
     }
 }
 
