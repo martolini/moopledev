@@ -54,42 +54,44 @@ function start() {
 
 function action(mode, type, selection) {
     if (mode == 1) {
-        status++;
-        if (status == 1)
-            cm.sendNextPrev("It is an important and final choice. You will not be able to turn back.");
-        else if (status == 2)
-            cm.sendYesNo("Do you want to become a #rPirate#k?");
-        else if (status == 3) {
-            if (cm.getJobId() == 0)
-                cm.changeJobById(500);
-            cm.sendOk("So be it! Now go with pride.");
-            cm.dispose();
-        } else if (status == 11)
-            cm.sendNextPrev("You are now ready to take the next step as a #rGunslinger#k or #rBrawler#k.");
-        else if (status == 12) {
-            cm.completeQuest(2192);
-            cm.completeQuest(2193);
-            cm.sendSimple("What do you want to become?#b\r\n#L0#Gunslinger#l\r\n#L1#Brawler#l#k");
-        }
-        else if (status == 13) {
-            if (selection == 1) {
-                jobName = "Brawler";
-                job = 520;
-            }
-            cm.sendYesNo("Do you want to become a #r" + jobName + "#k?");
-        } else if (status == 14) {
-            cm.changeJobById(job);
-            cm.sendOk("Congratulations, you are now a " + jobName+ ".");
-            cm.dispose();
-        }
-        else {
-            cm.sendOk("None of the statuses");
-            cm.dispose();
-        }
-    } else if (mode == 0) {
-        cm.sendOk("Come back once you have thought about it some more.");
+        cm.sendOk("Good job");
         cm.dispose();
-    }  else {
-        cm.dispose();
+    //     status++;
+    //     if (status == 1)
+    //         cm.sendNextPrev("It is an important and final choice. You will not be able to turn back.");
+    //     else if (status == 2)
+    //         cm.sendYesNo("Do you want to become a #rPirate#k?");
+    //     else if (status == 3) {
+    //         if (cm.getJobId() == 0)
+    //             cm.changeJobById(500);
+    //         cm.sendOk("So be it! Now go with pride.");
+    //         cm.dispose();
+    //     } else if (status == 11)
+    //         cm.sendNextPrev("You are now ready to take the next step as a #rGunslinger#k or #rBrawler#k.");
+    //     else if (status == 12) {
+    //         cm.completeQuest(2192);
+    //         cm.completeQuest(2193);
+    //         cm.sendSimple("What do you want to become?#b\r\n#L0#Gunslinger#l\r\n#L1#Brawler#l#k");
+    //     }
+    //     else if (status == 13) {
+    //         if (selection == 1) {
+    //             jobName = "Brawler";
+    //             job = 520;
+    //         }
+    //         cm.sendYesNo("Do you want to become a #r" + jobName + "#k?");
+    //     } else if (status == 14) {
+    //         cm.changeJobById(job);
+    //         cm.sendOk("Congratulations, you are now a " + jobName+ ".");
+    //         cm.dispose();
+    //     }
+    //     else {
+    //         cm.sendOk("None of the statuses");
+    //         cm.dispose();
+    //     }
+    // } else if (mode == 0) {
+    //     cm.sendOk("Come back once you have thought about it some more.");
+    //     cm.dispose();
+    // }  else {
+    //     cm.dispose();
     }
 }
