@@ -82,6 +82,10 @@ function action(mode, type, selection) {
             cm.sendOk("Congratulations, you are now a " + jobName+ ".");
             cm.dispose();
         }
+        else {
+            cm.sendOk("None of the statuses");
+            cm.dispose();
+        }
     } else if (mode == 0) {
         cm.sendOk("Come back once you have thought about it some more.");
         cm.dispose();
