@@ -153,6 +153,16 @@ public class Commands {
             for (MapleCharacter mc : c.getWorldServer().getPlayerStorage().getAllCharacters()) {
                 mc.setRates();
             }
+        } else if (sub[0].equals("droprate")) {
+            c.getWorldServer().setDropRate(Integer.parseInt(sub[1]));
+            for (MapleCharacter mc : c.getWorldServer().getPlayerStorage().getAllCharacters()) {
+                mc.setRates();
+            }
+        } else if (sub[0].equals("mesorate")) {
+            c.getWorldServer().setMesoRate(Integer.parseInt(sub[1]));
+            for (MapleCharacter mc : c.getWorldServer().getPlayerStorage().getAllCharacters()) {
+                mc.setRates();
+            }
         } else if (sub[0].equals("fame")) {
             MapleCharacter victim = cserv.getPlayerStorage().getCharacterByName(sub[1]);
             victim.setFame(Integer.parseInt(sub[2]));
