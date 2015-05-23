@@ -55,6 +55,7 @@ function start() {
 function action(mode, type, selection) {
     if (mode == 1) {
         status++;
+        cm.sendOk("status = " + status);
         if (status == 1)
             cm.sendNextPrev("It is an important and final choice. You will not be able to turn back.");
         else if (status == 2)
