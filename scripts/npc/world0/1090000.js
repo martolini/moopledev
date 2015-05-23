@@ -53,7 +53,7 @@ function start() {
 }
 
 function action(mode, type, selection) {
-    cm.sendOk("Hello bitch " + mode + "," + status);
+    cm.sendOk("Hello bitch");
     cm.dispose();
     // if (mode == 1) {
     //     status++;
