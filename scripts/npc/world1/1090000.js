@@ -53,9 +53,8 @@ function start() {
 }
 
 function action(mode, type, selection) {
-    if (mode == 1) {
-        cm.sendOk("Good job");
-        cm.dispose();
+    cm.sendOk("Good job");
+    cm.dispose();
     //     status++;
     //     if (status == 1)
     //         cm.sendNextPrev("It is an important and final choice. You will not be able to turn back.");
@@ -93,5 +92,4 @@ function action(mode, type, selection) {
     //     cm.dispose();
     // }  else {
     //     cm.dispose();
-    }
 }
