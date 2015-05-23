@@ -38,7 +38,7 @@ function start() {
         }
     } else {
         if (cm.getLevel() >= 30 && cm.getJobId() == 500) {
-            status = 10;
+            status = 12;
             cm.sendNext("The progress you have made is astonishing.");
         } else if (cm.getLevel() >= 70 && (cm.getJobId() == 510 || cm.getJobId() == 520))
             cm.sendOk("Please go visit #bArec#k. He resides in #bEl Nath#k.");
