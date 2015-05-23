@@ -3867,7 +3867,7 @@ public class MapleCharacter extends AbstractAnimatedMapleMapObject {
             }
         } else {
             if (isBeginnerJob()) {
-                this.expRate = 1;
+                this.expRate = 15;
             } else {
                 this.expRate = worldz.getExpRate();;
             }
