@@ -658,6 +658,7 @@ public class MapleStatEffect {
         }
         applyto.getClient().announce(MaplePacketCreator.updatePlayerStats(hpmpupdate, true));
         if (moveTo != -1) {
+            System.out.println("Should be moving, " + moveTo + ", " + applyto.getMap().getReturnMap() + ", " + applyto.getMap().getReturnMapId() + ", " + applyto.getMap());
             if (applyto.getMap().getReturnMapId() != applyto.getMapId()) {
                 MapleMap target;
                 if (moveTo == 999999999) {
