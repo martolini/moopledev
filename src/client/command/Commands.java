@@ -89,6 +89,18 @@ public class Commands {
                 chr.announce(MaplePacketCreator.giveBuff(0, 0, list));
                 chr.getMap().broadcastMessage(chr, MaplePacketCreator.giveForeignBuff(chr.getId(), list));
                 break;
+            case "exprate":
+                chr.message("The exprate is: " + chr.getExpRate());
+                break;
+            case "droprate":
+                chr.message("Droprate is: " + c.getWorldServer().getDropRate());
+                break;
+            case "questexprate":
+                chr.message("Quest exp rate is: " + c.getWorldServer().getQuestExpRate());
+                break;
+            case "mesorate":
+                chr.message("Meso rate is: " + c.getWorldServer().getMesoRate());
+                break;
             default:
                 if (chr.gmLevel() == 0) {
                     chr.yellowMessage("Player Command " + heading + sub[0] + " does not exist");
@@ -158,6 +170,8 @@ public class Commands {
             for (MapleCharacter mc : c.getWorldServer().getPlayerStorage().getAllCharacters()) {
                 mc.setRates();
             }
+        } else if (sub[0].equals("questexprate")) {
+            c.getWorldServer().setQuestExpRate(Integer.parseInt(sub[1]));
         } else if (sub[0].equals("mesorate")) {
             c.getWorldServer().setMesoRate(Integer.parseInt(sub[1]));
             for (MapleCharacter mc : c.getWorldServer().getPlayerStorage().getAllCharacters()) {

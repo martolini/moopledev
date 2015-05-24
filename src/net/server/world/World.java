@@ -51,7 +51,7 @@ import tools.MaplePacketCreator;
  */
 public class World {
 
-    private int id, flag, exprate, droprate, mesorate, bossdroprate;
+    private int id, flag, exprate, droprate, mesorate, bossdroprate, questexprate;
     private String eventmsg;
     private List<Channel> channels = new ArrayList<>();
     private Map<Integer, MapleParty> parties = new HashMap<>();
@@ -62,7 +62,7 @@ public class World {
     private Map<Integer, MapleGuildSummary> gsStore = new HashMap<>();
     private PlayerStorage players = new PlayerStorage();
 
-    public World(int world, int flag, String eventmsg, int exprate, int droprate, int mesorate, int bossdroprate) {
+    public World(int world, int flag, String eventmsg, int exprate, int droprate, int mesorate, int bossdroprate, int questexprate) {
         this.id = world;
         this.flag = flag;
         this.eventmsg = eventmsg;
@@ -70,6 +70,7 @@ public class World {
         this.droprate = droprate;
         this.mesorate = mesorate;
         this.bossdroprate = bossdroprate;
+        this.questexprate = questexprate;
         runningPartyId.set(1);
         runningMessengerId.set(1);
     }
@@ -128,6 +129,14 @@ public class World {
 
     public int getBossDropRate() {
         return bossdroprate;
+    }
+
+    public int getQuestExpRate() {
+        return questexprate;
+    }
+
+    public void setQuestExpRate(int questexp) {
+        this.questexprate = questexp;
     }
 
     public PlayerStorage getPlayerStorage() {

@@ -176,7 +176,8 @@ public class Server implements Runnable {
                         Integer.parseInt(p.getProperty("exprate" + i)),
                         Integer.parseInt(p.getProperty("droprate" + i)),
                         Integer.parseInt(p.getProperty("mesorate" + i)),
-                        Integer.parseInt(p.getProperty("bossdroprate" + i)));//ohlol
+                        Integer.parseInt(p.getProperty("bossdroprate" + i)),
+                        Integer.parseInt(p.getProperty("exprate" + i)) / 2);//ohlol
 
                 worldRecommendedList.add(new Pair<>(i, p.getProperty("whyamirecommended" + i)));
                 worlds.add(world);

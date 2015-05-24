@@ -32,12 +32,14 @@ import constants.ItemConstants;
 import constants.ServerConstants;
 import java.util.HashMap;
 import java.util.Map;
+import net.server.Server;
 import provider.MapleData;
 import provider.MapleDataTool;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
 import tools.MaplePacketCreator;
 import tools.Randomizer;
+import net.server.world.World;
 
 /**
  *
@@ -92,13 +94,14 @@ public class MapleQuestAction {
         switch (type) {
             case EXP:
                 status = c.getQuest(quest);
+                World worldz = Server.getInstance().getWorld(c.getWorld());
                 if (status.getStatus() == MapleQuestStatus.Status.NOT_STARTED && status.getForfeited() > 0) {
                     break;
                 }
                 if (c.isBeginnerJob()) {
                     c.gainExp(MapleDataTool.getInt(data), true, true);
                 } else {
-                    c.gainExp(MapleDataTool.getInt(data) * ServerConstants.QUEST_EXP_RATE, true, true);
+                    c.gainExp(MapleDataTool.getInt(data) * worldz.getQuestExpRate(), true, true);
                 }
                 break;
             case ITEM:

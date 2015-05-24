@@ -25,7 +25,6 @@ public class ServerConstants {
     public static short VERSION = 83;
     public static String[] WORLD_NAMES = {"Scania", "Bera", "Broa", "Windia", "Khaini", "Bellocan", "Mardia", "Kradia", "Yellonde", "Demethos", "Galicia", "El Nido", "Zenith", "Arcenia", "Kastia", "Judis", "Plana", "Kalluna", "Stius", "Croa", "Medere"};;
     // Rate Configuration
-    public static final byte QUEST_EXP_RATE = 30;
     public static final byte QUEST_MESO_RATE = 30;
     // Login Configuration
     public static final int CHANNEL_LOAD = 150;//Players per channel
