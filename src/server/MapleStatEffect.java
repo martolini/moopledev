@@ -658,7 +658,6 @@ public class MapleStatEffect {
         }
         applyto.getClient().announce(MaplePacketCreator.updatePlayerStats(hpmpupdate, true));
         if (moveTo != -1) {
-            System.out.println("Should be moving, " + moveTo + ", " + applyto.getMap().getReturnMap() + ", " + applyto.getMap().getReturnMapId() + ", " + applyto.getMap());
             if (applyto.getMap().getReturnMapId() != applyto.getMapId()) {
                 MapleMap target;
                 if (moveTo == 999999999) {
@@ -666,10 +665,13 @@ public class MapleStatEffect {
                 } else {
                     target = applyto.getClient().getWorldServer().getChannel(applyto.getClient().getChannel()).getMapFactory().getMap(moveTo);
                     int targetid = target.getId() / 10000000;
+                    System.out.println("Got target: " + target);
                     if (targetid != 60 && applyto.getMapId() / 10000000 != 61 && targetid != applyto.getMapId() / 10000000 && targetid != 21 && targetid != 20) {
+                        System.out.println("Not allowed to move there. Targetid = " + targetid);
                         return false;
                     }
                 }
+                System.out.println("Trying to change map");
                 applyto.changeMap(target);
             } else {
                 return false;
