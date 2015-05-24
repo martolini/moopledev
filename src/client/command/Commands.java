@@ -80,6 +80,7 @@
             case "spinel":
                 NPCScriptManager.getInstance().dispose(c);
                 NPCScriptManager.getInstance().start(c, 9000020, null, null);
+                break;
             case "dispose":
                 c.announce(MaplePacketCreator.enableActions());
                 chr.message("Done.");
@@ -250,19 +251,19 @@
                 victim = player;
             }
             victim.getClient().disconnect(false, false);
-        } else if (sub[0].equals("exprate")) {
+        } else if (sub[0].equals("setexprate")) {
             c.getWorldServer().setExpRate(Integer.parseInt(sub[1]));
             for (MapleCharacter mc : c.getWorldServer().getPlayerStorage().getAllCharacters()) {
                 mc.setRates();
             }
-        } else if (sub[0].equals("droprate")) {
+        } else if (sub[0].equals("setdroprate")) {
             c.getWorldServer().setDropRate(Integer.parseInt(sub[1]));
             for (MapleCharacter mc : c.getWorldServer().getPlayerStorage().getAllCharacters()) {
                 mc.setRates();
             }
-        } else if (sub[0].equals("questexprate")) {
+        } else if (sub[0].equals("setquestexprate")) {
             c.getWorldServer().setQuestExpRate(Integer.parseInt(sub[1]));
-        } else if (sub[0].equals("mesorate")) {
+        } else if (sub[0].equals("setmesorate")) {
             c.getWorldServer().setMesoRate(Integer.parseInt(sub[1]));
             for (MapleCharacter mc : c.getWorldServer().getPlayerStorage().getAllCharacters()) {
                 mc.setRates();
