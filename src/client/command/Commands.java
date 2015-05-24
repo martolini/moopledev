@@ -77,8 +77,10 @@
             return false;
         }
         switch (sub[0]) {
-            case "dispose":
+            case "spinel":
                 NPCScriptManager.getInstance().dispose(c);
+                NPCScriptManager.getInstance().start(c, 9000020, null, null);
+            case "dispose":
                 c.announce(MaplePacketCreator.enableActions());
                 chr.message("Done.");
                 break;
