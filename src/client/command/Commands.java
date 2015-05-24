@@ -19,56 +19,56 @@
  You should have received a copy of the GNU Affero General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package client.command;
+ package client.command;
 
-import client.MapleBuffStat;
-import client.MapleCharacter;
-import client.MapleClient;
-import client.MapleJob;
-import client.MapleStat;
-import client.Skill;
-import client.SkillFactory;
-import client.inventory.Item;
-import client.inventory.MapleInventoryType;
-import client.inventory.MaplePet;
-import constants.ItemConstants;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.net.InetAddress;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import net.server.Server;
-import net.server.channel.Channel;
-import net.server.world.World;
-import provider.MapleData;
-import provider.MapleDataProvider;
-import provider.MapleDataProviderFactory;
-import provider.MapleDataTool;
-import scripting.npc.NPCScriptManager;
-import server.MapleInventoryManipulator;
-import server.MapleItemInformationProvider;
-import server.MapleShopFactory;
-import server.TimerManager;
-import server.events.gm.MapleEvent;
-import server.life.MapleLifeFactory;
-import server.life.MapleMonster;
-import server.life.MapleNPC;
-import server.maps.MapleMap;
-import server.maps.MapleMapItem;
-import server.maps.MapleMapObject;
-import server.maps.MapleMapObjectType;
-import tools.DatabaseConnection;
-import tools.MaplePacketCreator;
-import tools.Pair;
+ import client.MapleBuffStat;
+ import client.MapleCharacter;
+ import client.MapleClient;
+ import client.MapleJob;
+ import client.MapleStat;
+ import client.Skill;
+ import client.SkillFactory;
+ import client.inventory.Item;
+ import client.inventory.MapleInventoryType;
+ import client.inventory.MaplePet;
+ import constants.ItemConstants;
+ import java.io.BufferedReader;
+ import java.io.File;
+ import java.io.InputStreamReader;
+ import java.net.InetAddress;
+ import java.net.URL;
+ import java.net.UnknownHostException;
+ import java.sql.PreparedStatement;
+ import java.sql.ResultSet;
+ import java.sql.SQLException;
+ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.List;
+ import net.server.Server;
+ import net.server.channel.Channel;
+ import net.server.world.World;
+ import provider.MapleData;
+ import provider.MapleDataProvider;
+ import provider.MapleDataProviderFactory;
+ import provider.MapleDataTool;
+ import scripting.npc.NPCScriptManager;
+ import server.MapleInventoryManipulator;
+ import server.MapleItemInformationProvider;
+ import server.MapleShopFactory;
+ import server.TimerManager;
+ import server.events.gm.MapleEvent;
+ import server.life.MapleLifeFactory;
+ import server.life.MapleMonster;
+ import server.life.MapleNPC;
+ import server.maps.MapleMap;
+ import server.maps.MapleMapItem;
+ import server.maps.MapleMapObject;
+ import server.maps.MapleMapObjectType;
+ import tools.DatabaseConnection;
+ import tools.MaplePacketCreator;
+ import tools.Pair;
 
-public class Commands {
+ public class Commands {
 
     public static boolean executePlayerCommand(MapleClient c, String[] sub, char heading) {
         MapleCharacter chr = c.getPlayer();
@@ -101,11 +101,99 @@ public class Commands {
             case "mesorate":
                 chr.message("Meso rate is: " + c.getWorldServer().getMesoRate());
                 break;
+            case "dropsitem":
+                try {
+                    try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("SELECT dropperid from drop_data WHERE itemid = " + sub[1] + ";"); ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            chr.dropMessage(String.valueOf(rs.getObject("dropperid")));
+                        }
+                    }
+                } catch (SQLException e) {
+                    chr.message("Query Failed.");
+                }
+                break;
+            case "clearslot":
+                if (sub.length < 2) {
+                    chr.dropMessage("eq, use, setup, etc, cash.");
+                }          
+                int x = 0;
+                if (sub[1].equals("all")) {
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.EQUIP, (byte) x, c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((byte) x).getQuantity(), false, true);
+                    }
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.USE).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, (byte) x, c.getPlayer().getInventory(MapleInventoryType.USE).getItem((byte) x).getQuantity(), false, true);
+                    }
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.SETUP).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.SETUP, (byte) x, c.getPlayer().getInventory(MapleInventoryType.SETUP).getItem((byte) x).getQuantity(), false, true);
+                    }
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.ETC).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.ETC, (byte) x, c.getPlayer().getInventory(MapleInventoryType.ETC).getItem((byte) x).getQuantity(), false, true);
+                    }
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.CASH).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.CASH, (byte) x, c.getPlayer().getInventory(MapleInventoryType.CASH).getItem((byte) x).getQuantity(), false, true);
+                    }        
+                    chr.dropMessage("All slots cleared.");                             
+
+                } else if (sub[1].equals("eq")) {
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.EQUIP, (byte) x, c.getPlayer().getInventory(MapleInventoryType.EQUIP).getItem((byte) x).getQuantity(), false, true);
+                    }        
+                    chr.dropMessage("Eq inventory slots cleared.");                          
+
+                } else if (sub[1].equals("use")) {
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.USE).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, (byte) x, c.getPlayer().getInventory(MapleInventoryType.USE).getItem((byte) x).getQuantity(), false, true);
+                    }        
+                    chr.dropMessage("Use inventory slots cleared.");                           
+
+                } else if (sub[1].equals("setup")) {
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.SETUP).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.SETUP, (byte) x, c.getPlayer().getInventory(MapleInventoryType.SETUP).getItem((byte) x).getQuantity(), false, true);
+                    }        
+                    chr.dropMessage("Setup inventory slots cleared.");                           
+
+                } else if (sub[1].equals("etc")) {
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.ETC).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.ETC, (byte) x, c.getPlayer().getInventory(MapleInventoryType.ETC).getItem((byte) x).getQuantity(), false, true);
+                    }        
+                    chr.dropMessage("Etc inventory slots cleared.");                           
+
+                } else if (sub[1].equals("cash")) {
+                    while (x < 101) {
+                        if (c.getPlayer().getInventory(MapleInventoryType.CASH).getItem((byte) x) == null)
+                            x++;
+                        MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.CASH, (byte) x, c.getPlayer().getInventory(MapleInventoryType.CASH).getItem((byte) x).getQuantity(), false, true);
+                    }
+                    chr.dropMessage("Cash inventory slots cleared.");
+
+                } else { 
+                    chr.dropMessage("@clearslot " + sub[1] + " does not exist!");
+                } 
+                break;
             default:
                 if (chr.gmLevel() == 0) {
                     chr.yellowMessage("Player Command " + heading + sub[0] + " does not exist");
                 }
-                return false;
+            return false;
         }
         return true;
     }
@@ -300,54 +388,54 @@ public class Commands {
             if (c.getPlayer().getMap().hasEventNPC()) {
                 switch (sub[1]) {
                     case "treasure":
-                        c.getChannelServer().setEvent(new MapleEvent(109010000, 50));
-                        break;
+                    c.getChannelServer().setEvent(new MapleEvent(109010000, 50));
+                    break;
                     case "ox":
-                        c.getChannelServer().setEvent(new MapleEvent(109020001, 50));
-                        srv.broadcastMessage(player.getWorld(), MaplePacketCreator.serverNotice(0, "Hello Scania let's play an event in " + player.getMap().getMapName() + " CH " + c.getChannel() + "! " + player.getMap().getEventNPC()));
-                        break;
+                    c.getChannelServer().setEvent(new MapleEvent(109020001, 50));
+                    srv.broadcastMessage(player.getWorld(), MaplePacketCreator.serverNotice(0, "Hello Scania let's play an event in " + player.getMap().getMapName() + " CH " + c.getChannel() + "! " + player.getMap().getEventNPC()));
+                    break;
                     case "ola":
                         c.getChannelServer().setEvent(new MapleEvent(109030101, 50)); // Wrong map but still Ola Ola
                         srv.broadcastMessage(player.getWorld(), MaplePacketCreator.serverNotice(0, "Hello Scania let's play an event in " + player.getMap().getMapName() + " CH " + c.getChannel() + "! " + player.getMap().getEventNPC()));
                         break;
-                    case "fitness":
+                        case "fitness":
                         c.getChannelServer().setEvent(new MapleEvent(109040000, 50));
                         srv.broadcastMessage(player.getWorld(), MaplePacketCreator.serverNotice(0, "Hello Scania let's play an event in " + player.getMap().getMapName() + " CH " + c.getChannel() + "! " + player.getMap().getEventNPC()));
                         break;
-                    case "snowball":
+                        case "snowball":
                         c.getChannelServer().setEvent(new MapleEvent(109060001, 50));
                         srv.broadcastMessage(player.getWorld(), MaplePacketCreator.serverNotice(0, "Hello Scania let's play an event in " + player.getMap().getMapName() + " CH " + c.getChannel() + "! " + player.getMap().getEventNPC()));
                         break;
-                    case "coconut":
+                        case "coconut":
                         c.getChannelServer().setEvent(new MapleEvent(109080000, 50));
                         srv.broadcastMessage(player.getWorld(), MaplePacketCreator.serverNotice(0, "Hello Scania let's play an event in " + player.getMap().getMapName() + " CH " + c.getChannel() + "! " + player.getMap().getEventNPC()));
                         break;
-                    default:
+                        default:
                         player.message("Wrong Syntax: /scheduleevent treasure, ox, ola, fitness, snowball or coconut");
                         break;
-                }
-            } else {
-                player.message("You can only use this command in the following maps: 60000, 104000000, 200000000, 220000000");
-            }
-
-        } else if (sub[0].equals("online")) {
-            for (Channel ch : srv.getChannelsFromWorld(player.getWorld())) {
-                String s = "Characters online (Channel " + ch.getId() + " Online: " + ch.getPlayerStorage().getAllCharacters().size() + ") : ";
-                if (ch.getPlayerStorage().getAllCharacters().size() < 50) {
-                    for (MapleCharacter chr : ch.getPlayerStorage().getAllCharacters()) {
-                        s += MapleCharacter.makeMapleReadable(chr.getName()) + ", ";
                     }
-                    player.dropMessage(s.substring(0, s.length() - 2));
+                } else {
+                    player.message("You can only use this command in the following maps: 60000, 104000000, 200000000, 220000000");
                 }
-            }
-        } else if (sub[0].equals("pap")) {
-            player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(8500001), player.getPosition());
-        } else if (sub[0].equals("pianus")) {
-            player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(8510000), player.getPosition());
-        } else if (sub[0].equalsIgnoreCase("search")) {
-            StringBuilder sb = new StringBuilder();
-            if (sub.length > 2) {
-                String search = joinStringFrom(sub, 2);
+
+            } else if (sub[0].equals("online")) {
+                for (Channel ch : srv.getChannelsFromWorld(player.getWorld())) {
+                    String s = "Characters online (Channel " + ch.getId() + " Online: " + ch.getPlayerStorage().getAllCharacters().size() + ") : ";
+                    if (ch.getPlayerStorage().getAllCharacters().size() < 50) {
+                        for (MapleCharacter chr : ch.getPlayerStorage().getAllCharacters()) {
+                            s += MapleCharacter.makeMapleReadable(chr.getName()) + ", ";
+                        }
+                        player.dropMessage(s.substring(0, s.length() - 2));
+                    }
+                }
+            } else if (sub[0].equals("pap")) {
+                player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(8500001), player.getPosition());
+            } else if (sub[0].equals("pianus")) {
+                player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(8510000), player.getPosition());
+            } else if (sub[0].equalsIgnoreCase("search")) {
+                StringBuilder sb = new StringBuilder();
+                if (sub.length > 2) {
+                    String search = joinStringFrom(sub, 2);
                 long start = System.currentTimeMillis();//for the lulz
                 MapleData data = null;
                 MapleDataProvider dataProvider = MapleDataProviderFactory.getDataProvider(new File("wz/String.wz"));
@@ -434,18 +522,18 @@ public class Commands {
         MapleCharacter player = c.getPlayer();
         switch (sub[0]) {
             case "horntail":
-                player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(8810026), player.getPosition());
-                break;
+            player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(8810026), player.getPosition());
+            break;
             case "packet":
-                player.getMap().broadcastMessage(MaplePacketCreator.customPacket(joinStringFrom(sub, 1)));
-                break;
+            player.getMap().broadcastMessage(MaplePacketCreator.customPacket(joinStringFrom(sub, 1)));
+            break;
             case "warpworld":
-                Server server = Server.getInstance();
-                byte worldb = Byte.parseByte(sub[1]);
-                if (worldb <= (server.getWorlds().size() - 1)) {
-                    try {
-                        String[] socket = server.getIP(worldb, c.getChannel()).split(":");
-                        c.getWorldServer().removePlayer(player);
+            Server server = Server.getInstance();
+            byte worldb = Byte.parseByte(sub[1]);
+            if (worldb <= (server.getWorlds().size() - 1)) {
+                try {
+                    String[] socket = server.getIP(worldb, c.getChannel()).split(":");
+                    c.getWorldServer().removePlayer(player);
                         player.getMap().removePlayer(player);//LOL FORGOT THIS ><                    
                         c.updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION);
                         player.setWorld(worldb);
@@ -460,27 +548,27 @@ public class Commands {
                 }
                 break;
             case "saveall"://fyi this is a stupid command
-                for (World world : Server.getInstance().getWorlds()) {
-                    for (MapleCharacter chr : world.getPlayerStorage().getAllCharacters()) {
-                        chr.saveToDB();
-                    }
+            for (World world : Server.getInstance().getWorlds()) {
+                for (MapleCharacter chr : world.getPlayerStorage().getAllCharacters()) {
+                    chr.saveToDB();
                 }
-                break;
+            }
+            break;
             case "npc":
-                if (sub.length < 1) {
-                    break;
-                }
-                MapleNPC npc = MapleLifeFactory.getNPC(Integer.parseInt(sub[1]));
-                if (npc != null) {
-                    npc.setPosition(player.getPosition());
-                    npc.setCy(player.getPosition().y);
-                    npc.setRx0(player.getPosition().x + 50);
-                    npc.setRx1(player.getPosition().x - 50);
-                    npc.setFh(player.getMap().getFootholds().findBelow(c.getPlayer().getPosition()).getId());
-                    player.getMap().addMapObject(npc);
-                    player.getMap().broadcastMessage(MaplePacketCreator.spawnNPC(npc));
-                }
+            if (sub.length < 1) {
                 break;
+            }
+            MapleNPC npc = MapleLifeFactory.getNPC(Integer.parseInt(sub[1]));
+            if (npc != null) {
+                npc.setPosition(player.getPosition());
+                npc.setCy(player.getPosition().y);
+                npc.setRx0(player.getPosition().x + 50);
+                npc.setRx1(player.getPosition().x - 50);
+                npc.setFh(player.getMap().getFootholds().findBelow(c.getPlayer().getPosition()).getId());
+                player.getMap().addMapObject(npc);
+                player.getMap().broadcastMessage(MaplePacketCreator.spawnNPC(npc));
+            }
+            break;
             case "jobperson": {
                 MapleCharacter victim = c.getChannelServer().getPlayerStorage().getCharacterByName(sub[1]);
                 victim.changeJob(MapleJob.getById(Integer.parseInt(sub[2])));
@@ -488,11 +576,11 @@ public class Commands {
                 break;
             }
             case "pinkbean":
-                player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(8820009), player.getPosition());
-                break;
+            player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(8820009), player.getPosition());
+            break;
             case "playernpc":
-                player.playerNPC(c.getChannelServer().getPlayerStorage().getCharacterByName(sub[1]), Integer.parseInt(sub[2]));
-                break;
+            player.playerNPC(c.getChannelServer().getPlayerStorage().getCharacterByName(sub[1]), Integer.parseInt(sub[2]));
+            break;
             case "setgmlevel": {
                 MapleCharacter victim = c.getChannelServer().getPlayerStorage().getCharacterByName(sub[1]);
                 victim.setGM(Integer.parseInt(sub[2]));
@@ -502,14 +590,14 @@ public class Commands {
             }
             case "shutdown":
             case "shutdownnow":
-                int time = 60000;
-                if (sub[0].equals("shutdownnow")) {
-                    time = 1;
-                } else if (sub.length > 1) {
-                    time *= Integer.parseInt(sub[1]);
-                }
-                TimerManager.getInstance().schedule(Server.getInstance().shutdown(false), time);
-                break;
+            int time = 60000;
+            if (sub[0].equals("shutdownnow")) {
+                time = 1;
+            } else if (sub.length > 1) {
+                time *= Integer.parseInt(sub[1]);
+            }
+            TimerManager.getInstance().schedule(Server.getInstance().shutdown(false), time);
+            break;
             case "sql": {
                 final String query = Commands.joinStringFrom(sub, 1);
                 try {
@@ -537,27 +625,27 @@ public class Commands {
                 break;
             }
             case "itemvac":
-                List<MapleMapObject> items = player.getMap().getMapObjectsInRange(player.getPosition(), Double.POSITIVE_INFINITY, Arrays.asList(MapleMapObjectType.ITEM));
-                for (MapleMapObject item : items) {
-                    MapleMapItem mapitem = (MapleMapItem) item;
-                    if (!MapleInventoryManipulator.addFromDrop(c, mapitem.getItem(), true)) {
-                        continue;
-                    }
-                    mapitem.setPickedUp(true);
-                    player.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 2, player.getId()), mapitem.getPosition());
-                    player.getMap().removeMapObject(item);
+            List<MapleMapObject> items = player.getMap().getMapObjectsInRange(player.getPosition(), Double.POSITIVE_INFINITY, Arrays.asList(MapleMapObjectType.ITEM));
+            for (MapleMapObject item : items) {
+                MapleMapItem mapitem = (MapleMapItem) item;
+                if (!MapleInventoryManipulator.addFromDrop(c, mapitem.getItem(), true)) {
+                    continue;
+                }
+                mapitem.setPickedUp(true);
+                player.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 2, player.getId()), mapitem.getPosition());
+                player.getMap().removeMapObject(item);
 
-                }
-                break;
+            }
+            break;
             case "zakum":
-                player.getMap().spawnFakeMonsterOnGroundBelow(MapleLifeFactory.getMonster(8800000), player.getPosition());
-                for (int x = 8800003; x < 8800011; x++) {
-                    player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(x), player.getPosition());
-                }
-                break;
+            player.getMap().spawnFakeMonsterOnGroundBelow(MapleLifeFactory.getMonster(8800000), player.getPosition());
+            for (int x = 8800003; x < 8800011; x++) {
+                player.getMap().spawnMonsterOnGroudBelow(MapleLifeFactory.getMonster(x), player.getPosition());
+            }
+            break;
             default:
-                player.yellowMessage("Command " + heading + sub[0] + " does not exist.");
-                break;
+            player.yellowMessage("Command " + heading + sub[0] + " does not exist.");
+            break;
         }
     }
 
