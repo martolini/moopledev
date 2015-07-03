@@ -561,6 +561,8 @@ public class Server implements Runnable {
                     e.printStackTrace();
                 }
                 if (!restart) {
+                    System.gc();
+                    System.out.println("Exiting!");
                     System.exit(0);
                 } else {
                     System.out.println("\r\nRestarting the server....\r\n");
