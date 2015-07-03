@@ -43,7 +43,7 @@ var chosenSection = -1;
 
 function start() {
     var string = "#fUI/UIWindow.img/QuestIcon/3/0#\r\n#L0#World Tour#l\r\n#L1#Job Advance#l";
-    if (cm.getLevel() >= 12)
+    if (cm.getLevel() >= 120)
         string += "\r\n#L2#Max skills (120 only)#l";
     cm.sendSimple(string);
 }

@@ -87,10 +87,15 @@ public class MapleServerHandler extends IoHandlerAdapter {
         MapleAESOFB sendCypher = new MapleAESOFB(key, ivSend, (short) (0xFFFF - ServerConstants.VERSION));
         MapleAESOFB recvCypher = new MapleAESOFB(key, ivRecv, (short) ServerConstants.VERSION);
         MapleClient client = new MapleClient(sendCypher, recvCypher, session);
+        System.out.println("Created mapleclient");
         client.setWorld(world);
+        System.out.println("World is set");
         client.setChannel(channel);
+        System.out.println("Channel is set");
         session.write(MaplePacketCreator.getHello(ServerConstants.VERSION, ivSend, ivRecv));
+        System.out.println("Write hello to session");
         session.setAttribute(MapleClient.CLIENT_KEY, client);
+        System.out.println("Attribute sat");
     }
 
     @Override

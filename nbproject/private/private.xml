@@ -4,6 +4,11 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/Users/martinroed/Documents/moopledev/src/constants/ServerConstants.java</file>
+            <file>file:/Users/martinroed/Documents/moopledev/src/server/quest/MapleQuestAction.java</file>
+            <file>file:/Users/martinroed/Documents/moopledev/src/scripting/npc/NPCConversationManager.java</file>
+            <file>file:/Users/martinroed/Documents/moopledev/src/net/server/Server.java</file>
+            <file>file:/Users/martinroed/Documents/moopledev/src/client/command/Commands.java</file>
+            <file>file:/Users/martinroed/Documents/moopledev/src/net/server/channel/Channel.java</file>
             <file>file:/Users/martinroed/Documents/moopledev/src/client/MapleCharacter.java</file>
         </group>
     </open-files>
