@@ -1,8 +1,8 @@
 /*
-	This file is part of the OdinMS Maple Story Server
+    This file is part of the OdinMS Maple Story Server
     Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-		       Matthias Butz <matze@odinms.de>
-		       Jan Christian Meyer <vimes@odinms.de>
+               Matthias Butz <matze@odinms.de>
+               Jan Christian Meyer <vimes@odinms.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as
@@ -20,127 +20,43 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 /*
- * @Name: Cody
- * @NPC ID: 9200000
- * @Author: MrXotic
- * @Author: XxOsirisxX
- * @Author: Moogra
- */
-
-var status = -1;
-var possibleJobs = new Array();
-var maps = [
-/*BossMaps*/[100000005, 105070002, 105090900, 230040420, 280030000, 220080000, 240020402, 240020101, 801040100, 240060200, 610010005, 610010012, 610010013, 610010100, 610010101, 610010102, 610010103, 610010104],
-/*MonsterMaps*/[100040001, 101010100, 104040000, 103000101, 103000105, 101030110, 106000002, 101030103, 101040001, 101040003, 101030001, 104010001, 105070001, 105090300, 105040306, 230020000, 230010400, 211041400, 222010000, 220080000, 220070301, 220070201, 220050300, 220010500, 250020000, 251010000, 200040000, 200010301, 240020100, 240040500, 240040000, 600020300, 801040004, 800020130, 800020400],
-/*Towns*/[130000000, 300000000, 1010000, 680000000, 230000000, 101000000, 211000000, 100000000, 251000000, 103000000, 222000000, 104000000, 240000000, 220000000, 250000000, 800000000, 600000000, 221000000, 200000000, 102000000, 801000000, 105040300, 610010004, 260000000, 540010000, 120000000]];
-var jobA = false;
-var warper = false;
-var job;
-var newJob;
-var chosenMap = -1;
-var chosenSection = -1;
+ * Gachapon
+ * @NPC : Gachapon - Ellinia
+ * @NPC ID : 9100101
+ * @author Moogra
+ * Item IDs by Sam
+*/
+var ids = [1382001,1002064,1050049,1302027,1051023,1332013,1312001,1040080,1061087,1050054,1051047, 1312030,1050008,1051027,1051055,1372003,1061083,1050055,1442017,1442009,1372010,2022113, 1302019,1051017,1002245,1002084,1050056,1422005,2000005,1002028,2002018,1050003,1002143, 1322010];
+var status = 0;
 
 function start() {
-    cm.sendSimple("#fUI/UIWindow.img/QuestIcon/3/0#\r\n#L0#World Tour#l\r\n#L1#Job Advance#l");
-}
-
-function action(mode, type, selection) {
-    status++;
-    if(mode != 1){
+    if (cm.haveItem(5451000)) {
+        cm.gainItem(5451000, -1);
+        cm.processGachapon(ids, true);
         cm.dispose();
-        return;
-    }
-    if (!jobA && !warper)
-        if (selection == 1)
-            jobA = true;
-        else
-            warper = true;
-    if (jobA)
-        jobAdv(selection);
-    else
-        warp(selection);
-}
-
-function warp(selection){
-    if (status == 0)
-        cm.sendSimple("#fUI/UIWindow.img/QuestIcon/3/0#\r\n#L0#Boss Maps#l\r\n#L1#Monster Maps#l\r\n#L2#Town Maps#l");
-    else if (status == 1) {
-        chosenSection = selection;
-        var selStr = "Select your destination.#b";
-        for (var i = 0; i < maps[selection].length; i++)
-            selStr += "\r\n#L" + i + "##m" + maps[selection][i] + "#";
-        cm.sendSimple(selStr);
-    } else if (status == 2) {
-        chosenMap = selection;
-        cm.sendYesNo("Do you want to go to #m" + maps[chosenSection][selection] + "#?");
-    } else if (status == 3) {
-        cm.warp(maps[chosenSection][chosenMap]);
-        cm.dispose();
+    } else if (cm.haveItem(5220000))
+        cm.sendYesNo("You may use Gachapon. Would you like to use your Gachapon ticket?");
+    else {
+        cm.sendSimple("Welcome to the " + cm.getPlayer().getMap().getMapName() + " Gachapon. How may I help you?\r\n\r\n#L0#What is Gachapon?#l\r\n#L1#Where can you buy Gachapon tickets?#l");
     }
 }
 
-function jobAdv(selection){
-    if (status == 0) {
-        newJob = cm.getJobId() + 1;
-        if (cm.getJobId() % 10 == 2) {
-            cm.sendOk("Hey, how's it going? I've been doing well here.");
-            cm.dispose();
-        } else if (cm.getJobId() % 10 >= 0 && cm.getJobId() % 100 != 0) {
-            var secondJob = cm.getJobId() % 10 == 0;
-            if ((secondJob && cm.getLevel() < 70) || (!secondJob && cm.getLevel() < 120)) {
-                cm.sendOk("Hey, how's it going? I've been doing well here.");
+function action(mode, type, selection){
+    if (mode == 1 && cm.haveItem(5220000)) {
+        cm.processGachapon(ids, false);
+        cm.dispose();
+    } else {
+        if (mode > 0) {
+            status++;
+            if (selection == 0) {
+                cm.sendNext("Play Gachapon to earn rare scrolls, equipment, chairs, mastery books, and other cool items! All you need is a #bGachapon Ticket#k to be the winner of a random mix of items.");
+            } else if (selection == 1) {
+                cm.sendNext("Gachapon Tickets are available in the #rCash Shop#k and can be purchased using NX or Maple Points. Click on the red SHOP at the lower right hand corner of the screen to visit the #rCash Shop #kwhere you can purchase tickets.");
                 cm.dispose();
-            } else
-                cm.sendYesNo("Great job getting to level " + cm.getLevel() + ". Would you like to become a #b"+cm.getJobName(newJob)+"#k ?");
-        } else {
-            if (cm.getJobId() % 1000 == 0) {
-                if (cm.getLevel() >= 10) 
-                    for (var i = 1; i < 6; i++) 
-                        possibleJobs.push(cm.getJobId() + 100 * i);
-                else if (cm.getLevel() >= 8)
-                    possibleJobs.push(200);
-            } else if (cm.getLevel() >= 30) {
-                switch (cm.getJobId()) {
-                    case 100:
-                    case 200:
-                        possibleJobs.push(cm.getJobId() + 30);
-                    case 300:
-                    case 400:
-                    case 500:
-                        possibleJobs.push(cm.getJobId() + 20);
-                    case 1100:
-                    case 1200:
-                    case 1300:
-                    case 1400:
-                    case 1500:
-                        possibleJobs.push(cm.getJobId() + 10);
-                        break;
-                }
-            }
-            if (possibleJobs.length == 0) {
-                cm.sendOk("Hey, how's it going? I've been doing well here.");
+            } else if (status == 2) {
+                cm.sendNext("You'll find a variety of items from the " + cm.getPlayer().getMap().getMapName() + " Gachapon, but you'll most likely find several related items and scrolls since " + cm.getPlayer().getMap().getMapName() + " is known as the town.");
                 cm.dispose();
-            } else {
-                var text = "There are the available jobs you can take#b";
-                for (var j = 0; j < possibleJobs.length; j++)
-                    text += "\r\n#L"+j+"#"+cm.getJobName(possibleJobs[j])+"#l";
-                cm.sendSimple(text);
             }
         }
-    } else if (status == 1 && cm.getJobId() % 100 != 0) {
-        cm.changeJobById(cm.getJobId() + 1);
-        cm.maxMastery();
-        cm.dispose();
-    } else if (status == 1) {
-        cm.changeJobById(possibleJobs[selection]);
-        if (cm.getJobId() % 100 == 0)
-            cm.resetStats();
-        cm.dispose();
-    } else if (status == 2) {
-        job = selection;
-        cm.sendYesNo("Are you sure you want to job advance?");
-    } else if (status == 3) {
-        cm.changeJobById(possibleJobs[job]);
-        cm.dispose();
     }
 }

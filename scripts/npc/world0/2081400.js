@@ -29,12 +29,8 @@ function start() {
     if (cm.getLevel() < 120) {
         cm.sendOk("Sorry, but you have to be at least level 120 to make the 4th Job Advancement.");
         cm.dispose();
-    } else if (cm.getLevel() >=120)
-        cm.sendNext("Do you want to get your 4th Job Advancement?");
-}
-
-function action(mode, type, selection) {
-    if (mode > 1)
+    } else if (cm.getLevel() >=120) {
         cm.changeJobById(cm.getJobId() + 1);
-    cm.dispose();
+        cm.sendOk("Congratulations on becoming level 120! Here is your new job.");
+    }
 }

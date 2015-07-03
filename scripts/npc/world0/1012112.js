@@ -56,36 +56,38 @@ function action(mode, type, selection) {
                 } else if (status == 1) {
                     cm.sendSimple("Would you like to head over to the hill of primrose and join forces with your party members to help Growlie out?\r\n#b#L0# Yes, I will go.#l");
                 } else if (status == 2) {
-                    if (cm.getParty() == null) {
-                        cm.sendOk("You are not in a party.");
-                        cm.dispose();
-                        return;
-                    } else {
-                        var cango = true;
-                        var things = cm.getClient().getChannelServer().getPartyMembers(cm.getPlayer().getParty());
-                        var onmap = 0;
-                        for (var i = 0; i < things.size(); i++) {
-                            if (things.get(i).getMap().getId() == cm.getPlayer().getParty().getLeader().getMapid()) {
-                                if (things.get(i).getLevel() < 10) {
-                                    cango = false;
-                                    break;
-                                }
-                                onmap++;
-                            }
-                        }
-                        if (onmap < 3 || cm.getClient().getChannelServer().getMapFactory().getMap(910010000).getAllPlayer().getSize() > 0)
-                            cango = false;
-                        if (cango) {
-                            cm.getClient().getChannelServer().getMapFactory().getMap(910010000).resetRiceCakes(); // lol lame method
-                            cm.getClient().getChannelServer().getMapFactory().getMap(910010000).setAllowHPQSummon(false); // lol lame method
-                            cm.warpParty(910010000);
-                            cm.dispose();
-                        } else {
-                            // insert message here
-                            cm.sendOk("UNDER CONSTRUCTION");
-                            cm.dispose();
-                        }
-                    }
+                    cm.sendOk("HELLO");
+                    cm.dispose();
+                    // if (cm.getParty() == null) {
+                    //     cm.sendOk("You are not in a party.");
+                    //     cm.dispose();
+                    //     return;
+                    // } else {
+                    //     var cango = true;
+                    //     var things = cm.getClient().getChannelServer().getPartyMembers(cm.getPlayer().getParty());
+                    //     var onmap = 0;
+                    //     for (var i = 0; i < things.size(); i++) {
+                    //         if (things.get(i).getMap().getId() == cm.getPlayer().getParty().getLeader().getMapid()) {
+                    //             if (things.get(i).getLevel() < 10) {
+                    //                 cango = false;
+                    //                 break;
+                    //             }
+                    //             onmap++;
+                    //         }
+                    //     }
+                    //     if (onmap < 3 || cm.getClient().getChannelServer().getMapFactory().getMap(910010000).getAllPlayer().getSize() > 0)
+                    //         cango = false;
+                    //     if (cango) {
+                    //         cm.getClient().getChannelServer().getMapFactory().getMap(910010000).resetRiceCakes(); // lol lame method
+                    //         cm.getClient().getChannelServer().getMapFactory().getMap(910010000).setAllowHPQSummon(false); // lol lame method
+                    //         cm.warpParty(910010000);
+                    //         cm.dispose();
+                    //     } else {
+                    //         // insert message here
+                    //         cm.sendOk("UNDER CONSTRUCTION");
+                    //         cm.dispose();
+                    //     }
+                    // }
                 }
             }
         } else if (cm.getPlayer().getMap().getId() == 910010100) {
