@@ -1,1 +1,4 @@
 wz
+logs
+logs/*
+nohup.out
