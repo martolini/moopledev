@@ -35,17 +35,13 @@ var maps = [
 /*Towns*/[130000000, 300000000, 1010000, 680000000, 230000000, 101000000, 211000000, 100000000, 251000000, 103000000, 222000000, 104000000, 240000000, 220000000, 250000000, 800000000, 600000000, 221000000, 200000000, 102000000, 801000000, 105040300, 610010004, 260000000, 540010000, 120000000]];
 var jobA = false;
 var warper = false;
-var maxS = false;
 var job;
 var newJob;
 var chosenMap = -1;
 var chosenSection = -1;
 
 function start() {
-    var string = "#fUI/UIWindow.img/QuestIcon/3/0#\r\n#L0#World Tour#l\r\n#L1#Job Advance#l";
-    if (cm.getLevel() >= 120)
-        string += "\r\n#L2#Max skills (120 only)#l";
-    cm.sendSimple(string);
+    cm.sendSimple("#fUI/UIWindow.img/QuestIcon/3/0#\r\n#L0#World Tour#l\r\n#L1#Job Advance#l");
 }
 
 function action(mode, type, selection) {
@@ -54,27 +50,15 @@ function action(mode, type, selection) {
         cm.dispose();
         return;
     }
-    if (!jobA && !warper && !maxS) {
-        switch (selection) {
-            case 0:
-                warper = true;
-                break;
-            case 1:
-                jobA = true;
-                break;
-            case 2:
-                maxS = true;
-                break;
-            default:
-                maxS = true;
-                break;
-        }
-    }
+    if (!jobA && !warper)
+        if (selection == 1)
+            jobA = true;
+        else
+            warper = true;
     if (jobA)
         jobAdv(selection);
-    else if (warper)
+    else
         warp(selection);
-    else maxAllSkills(selection);
 }
 
 function warp(selection){
@@ -91,17 +75,6 @@ function warp(selection){
         cm.sendYesNo("Do you want to go to #m" + maps[chosenSection][selection] + "#?");
     } else if (status == 3) {
         cm.warp(maps[chosenSection][chosenMap]);
-        cm.dispose();
-    }
-}
-
-function maxAllSkills(selection) {
-    if (status == 0) {
-        cm.sendYesNo("Do you really want to max all your skills? Playing regular style is fun as well.");
-    }
-    else if (status == 1) {
-        cm.maxSkills();
-        cm.sendOk("I just maxed all your skills. See you.");
         cm.dispose();
     }
 }
@@ -156,6 +129,7 @@ function jobAdv(selection){
         }
     } else if (status == 1 && cm.getJobId() % 100 != 0) {
         cm.changeJobById(cm.getJobId() + 1);
+        cm.maxMastery();
         cm.dispose();
     } else if (status == 1) {
         cm.changeJobById(possibleJobs[selection]);
