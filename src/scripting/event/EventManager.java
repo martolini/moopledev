@@ -29,12 +29,16 @@ import java.util.Properties;
 import java.util.concurrent.ScheduledFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import javax.script.Invocable;
 import javax.script.ScriptException;
+
 import net.server.channel.Channel;
 import net.server.world.MapleParty;
 import server.TimerManager;
+import server.expeditions.MapleExpedition;
 import server.maps.MapleMap;
+import client.MapleCharacter;
 
 /**
  *
@@ -133,11 +137,44 @@ public class EventManager {
     public String getProperty(String key) {
         return props.getProperty(key);
     }
+    
+    public void setProperty(String key, int value) {
+        props.setProperty(key, value + "");
+    }
+
+    public int getIntProperty(String key) {
+        return Integer.parseInt(props.getProperty(key));
+    }
 
     public String getName() {
         return name;
     }
 
+    //Expedition method: starts an expedition
+    public void startInstance(MapleExpedition exped) {
+        try {
+            EventInstanceManager eim = (EventInstanceManager) (iv.invokeFunction("setup", (Object) null));
+            eim.registerExpedition(exped);
+            exped.start();
+        } catch (ScriptException ex) {
+            Logger.getLogger(EventManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchMethodException ex) {
+            Logger.getLogger(EventManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    //Regular method: player 
+    public void startInstance(MapleCharacter chr) {
+        try {
+            EventInstanceManager eim = (EventInstanceManager) (iv.invokeFunction("setup", (Object) null));
+            eim.registerPlayer(chr);
+        } catch (ScriptException ex) {
+            Logger.getLogger(EventManager.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (NoSuchMethodException ex) {
+            Logger.getLogger(EventManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }    
+    
     //PQ method: starts a PQ
     public void startInstance(MapleParty party, MapleMap map) {
         try {

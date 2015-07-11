@@ -21,7 +21,15 @@
 */
 package net.server.channel.handlers;
 
-import net.server.channel.handlers.AbstractDealDamageHandler;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
+import server.MapleStatEffect;
+import server.TimerManager;
+import tools.MaplePacketCreator;
+import tools.Pair;
+import tools.data.input.SeekableLittleEndianAccessor;
 import client.MapleBuffStat;
 import client.MapleCharacter;
 import client.MapleCharacter.CancelCooldownAction;
@@ -30,6 +38,7 @@ import client.MapleJob;
 import client.MapleStat;
 import client.Skill;
 import client.SkillFactory;
+import constants.GameConstants;
 import constants.skills.Crusader;
 import constants.skills.DawnWarrior;
 import constants.skills.DragonKnight;
@@ -37,28 +46,29 @@ import constants.skills.Hero;
 import constants.skills.NightWalker;
 import constants.skills.Rogue;
 import constants.skills.WindArcher;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import server.MapleStatEffect;
-import server.TimerManager;
-import tools.MaplePacketCreator;
-import tools.Pair;
-import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
-    private boolean isFinisher(int skillId) {
-        return skillId > 1111002 && skillId < 1111007 || skillId == 11111002 || skillId == 11111003;
-    }
-
     @Override
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         MapleCharacter player = c.getPlayer();
-        AttackInfo attack = parseDamage(slea, player, false);
+		/*long timeElapsed = System.currentTimeMillis() - player.getAutobanManager().getLastSpam(8);
+		if(timeElapsed < 300) {
+			AutobanFactory.FAST_ATTACK.alert(player, "Time: " + timeElapsed);
+		}
+		player.getAutobanManager().spam(8);*/
+        AttackInfo attack = parseDamage(slea, player, false, false);
+        if (player.getBuffEffect(MapleBuffStat.MORPH) != null) {
+            if(player.getBuffEffect(MapleBuffStat.MORPH).isMorphWithoutAttack()) {
+                // How are they attacking when the client won't let them?
+                player.getClient().disconnect(false, false);
+                return; 
+            }
+        }
+        
         player.getMap().broadcastMessage(player, MaplePacketCreator.closeRangeAttack(player, attack.skill, attack.skilllevel, attack.stance, attack.numAttackedAndDamage, attack.allDamage, attack.speed, attack.direction, attack.display), false, true);
         int numFinisherOrbs = 0;
         Integer comboBuff = player.getBuffedValue(MapleBuffStat.COMBO);
-        if (isFinisher(attack.skill)) {
+        if (GameConstants.isFinisherSkill(attack.skill)) {
             if (comboBuff != null) {
                 numFinisherOrbs = comboBuff.intValue() - 1;
             }
@@ -126,7 +136,7 @@ public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
         if (attack.skill != 0) {
             attackCount = attack.getAttackEffect(player, null).getAttackCount();
         }
-        if (numFinisherOrbs == 0 && isFinisher(attack.skill)) {
+        if (numFinisherOrbs == 0 && GameConstants.isFinisherSkill(attack.skill)) {
             return;
         }
         if (attack.skill > 0) {

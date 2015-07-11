@@ -23,13 +23,18 @@ package scripting.npc;
 
 import client.MapleCharacter;
 import client.MapleClient;
+
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.HashMap;
 import java.util.Map;
+
 import javax.script.Invocable;
 import javax.script.ScriptException;
+
 import scripting.AbstractScriptManager;
+import server.life.MapleLifeFactory;
 import tools.FilePrinter;
+import tools.MaplePacketCreator;
 
 /**
  *
@@ -45,43 +50,52 @@ public class NPCScriptManager extends AbstractScriptManager {
         return instance;
     }
 
-    public void start(MapleClient c, int npc, String filename, MapleCharacter chr) {
+    public void start(MapleClient c, int npc, MapleCharacter chr) {
+        start(c, npc, null, chr);
+    }
+
+    public void start(MapleClient c, int npc, String fileName, MapleCharacter chr) {
         try {
-            NPCConversationManager cm = new NPCConversationManager(c, npc);
+            NPCConversationManager cm = new NPCConversationManager(c, npc, fileName);
             if (cms.containsKey(c)) {
                 dispose(c);
-                return;
             }
-            cms.put(c, cm);
-            Invocable iv = null;
-            if (filename != null) {
-                iv = getInvocable("npc/world" + c.getWorld() + "/" + filename + ".js", c);
-            }
-            if (iv == null) {
-                iv = getInvocable("npc/world" + c.getWorld() + "/" + npc + ".js", c);
-            }
-            if (iv == null || NPCScriptManager.getInstance() == null) {
-                dispose(c);
-                return;
-            }
-            engine.put("cm", cm);
-            scripts.put(c, iv);
-            try {
-                iv.invokeFunction("start");
-            } catch (final NoSuchMethodException nsme) {
-                try {
-                    iv.invokeFunction("start", chr);
-                } catch (final NoSuchMethodException nsma) {
-                    iv.invokeFunction("action", (byte) 1, (byte) 0, 0);
+            if (c.canClickNPC()) {
+                cms.put(c, cm);
+                Invocable iv = null;
+                if (fileName != null) {
+                    iv = getInvocable("npc/world" + c.getWorld() + "/" + fileName + ".js", c);
                 }
+                if (iv == null) {
+                    iv = getInvocable("npc/world" + c.getWorld() + "/" + npc + ".js", c);
+                }
+                if (iv == null) {
+                    FilePrinter.printError(FilePrinter.NPC_UNCODED, "NPC " + MapleLifeFactory.getNPC(npc).getName() + "(" + npc + ") is not coded.\r\n");
+                }
+                if (iv == null || NPCScriptManager.getInstance() == null) {
+                    dispose(c);
+                    return;
+                }
+                engine.put("cm", cm);
+                scripts.put(c, iv);
+                c.setClickedNPC();
+                try {
+                    iv.invokeFunction("start");
+                } catch (final NoSuchMethodException nsme) {
+                    try {
+                        iv.invokeFunction("start", chr);
+                    } catch (final NoSuchMethodException nsma) {
+                        nsma.printStackTrace();
+                    }
+                }
+            } else {
+                c.announce(MaplePacketCreator.enableActions());
             }
         } catch (final UndeclaredThrowableException | ScriptException ute) {
             FilePrinter.printError(FilePrinter.NPC + npc + ".txt", ute);
-            notice(c, npc);
             dispose(c);
         } catch (final Exception e) {
             FilePrinter.printError(FilePrinter.NPC + npc + ".txt", e);
-            notice(c, npc);
             dispose(c);
         }
     }
@@ -90,13 +104,13 @@ public class NPCScriptManager extends AbstractScriptManager {
         Invocable iv = scripts.get(c);
         if (iv != null) {
             try {
+                c.setClickedNPC();
                 iv.invokeFunction("action", mode, type, selection);
             } catch (ScriptException | NoSuchMethodException t) {
                 if (getCM(c) != null) {
                     FilePrinter.printError(FilePrinter.NPC + getCM(c).getNpc() + ".txt", t);
-                    notice(c, getCM(c).getNpc());
                 }
-                dispose(c);//lol this should be last, not notice fags
+                dispose(c);
             }
         }
     }
@@ -105,7 +119,12 @@ public class NPCScriptManager extends AbstractScriptManager {
         MapleClient c = cm.getClient();
         cms.remove(c);
         scripts.remove(c);
-        resetContext("npc/world" + c.getWorld() + "/" + cm.getNpc() + ".js", c);
+        
+        if(cm.getScriptName() != null) {
+            resetContext("npc/world" + c.getWorld() + "/" + cm.getScriptName() + ".js", c);
+        } else {
+            resetContext("npc/world" + c.getWorld() + "/" + cm.getNpc() + ".js", c);
+        }
     }
 
     public void dispose(MapleClient c) {
@@ -118,9 +137,4 @@ public class NPCScriptManager extends AbstractScriptManager {
         return cms.get(c);
     }
 
-    private void notice(MapleClient c, int id) {
-        if (c != null) {
-            c.getPlayer().dropMessage(1, "An unknown error occured while executing this npc. Please report it to one of the admins! ID: " + id);
-        }
-    }
 }

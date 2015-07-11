@@ -28,6 +28,7 @@ import constants.skills.Brawler;
 import constants.skills.ChiefBandit;
 import constants.skills.Corsair;
 import constants.skills.DarkKnight;
+import constants.skills.Evan;
 import constants.skills.FPArchMage;
 import constants.skills.FPMage;
 import constants.skills.Gunslinger;
@@ -56,7 +57,7 @@ public final class SkillEffectHandler extends AbstractMaplePacketHandler {
             case Bishop.BIG_BANG:
             case Bowmaster.HURRICANE:
             case Marksman.PIERCING_ARROW:
-            case ChiefBandit.CHAKRA:
+			case ChiefBandit.CHAKRA:
             case Brawler.CORKSCREW_BLOW:
             case Gunslinger.GRENADE:
             case Corsair.RAPID_FIRE:
@@ -66,6 +67,8 @@ public final class SkillEffectHandler extends AbstractMaplePacketHandler {
             case Paladin.MONSTER_MAGNET:
             case DarkKnight.MONSTER_MAGNET:
             case Hero.MONSTER_MAGNET:
+            case Evan.FIRE_BREATH:
+            case Evan.ICE_BREATH:
                 c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.skillEffect(c.getPlayer(), skillId, level, flags, speed, aids), false);
                 return;
             default:

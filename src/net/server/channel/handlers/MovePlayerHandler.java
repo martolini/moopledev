@@ -21,9 +21,9 @@
 */
 package net.server.channel.handlers;
 
-import net.server.channel.handlers.AbstractMovementPacketHandler;
-import java.util.List;
 import client.MapleClient;
+import java.util.List;
+import net.server.channel.handlers.AbstractMovementPacketHandler;
 import server.movement.LifeMovementFragment;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
@@ -39,7 +39,7 @@ public final class MovePlayerHandler extends AbstractMovementPacketHandler {
                 c.getPlayer().getMap().broadcastGMMessage(c.getPlayer(), MaplePacketCreator.movePlayer(c.getPlayer().getId(), res), false);
             } else {
                 c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.movePlayer(c.getPlayer().getId(), res), false);
-            }            
+            }
         }
     }
 }

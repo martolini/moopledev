@@ -53,10 +53,15 @@ public final class NPCTalkHandler extends AbstractMaplePacketHandler {
                     c.announce(MaplePacketCreator.enableActions());
                     return;
                 }
-                NPCScriptManager.getInstance().start(c, npc.getId(), null, null);
+                if(npc.getId() >= 9100100 && npc.getId() <= 9100200) {
+                    // Custom handling for gachapon scripts to reduce the amount of scripts needed.
+                    NPCScriptManager.getInstance().start(c, npc.getId(), "gachapon", null);
+                } else {
+                    NPCScriptManager.getInstance().start(c, npc.getId(), null);
+                }
             }
         } else if (obj instanceof PlayerNPCs) {
-            NPCScriptManager.getInstance().start(c, ((PlayerNPCs) obj).getId(), null, null);
+            NPCScriptManager.getInstance().start(c, ((PlayerNPCs) obj).getId(), null);
         }
     }
 }

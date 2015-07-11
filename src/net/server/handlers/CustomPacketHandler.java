@@ -29,7 +29,7 @@ import tools.data.input.SeekableLittleEndianAccessor;
 public class CustomPacketHandler implements MaplePacketHandler {
     @Override
     public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        if (slea.available() > 0 && c.gmLevel() == 4) {//w/e       
+        if (slea.available() > 0 && c.getGMLevel() == 4) {//w/e       
             c.announce(MaplePacketCreator.customPacket(slea.read((int) slea.available())));
         }
     }

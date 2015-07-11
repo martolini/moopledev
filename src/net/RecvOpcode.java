@@ -155,6 +155,7 @@ public enum RecvOpcode {
     SUMMON_ATTACK(0xB0),
     DAMAGE_SUMMON(0xB1),
     BEHOLDER(0xB2),
+    MOVE_DRAGON(0xB5),
     MOVE_LIFE(0xBC),
     AUTO_AGGRO(0xBD),
     MOB_DAMAGE_MOB_FRIENDLY(0xC0),

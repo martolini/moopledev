@@ -87,7 +87,7 @@ public final class MoveLifeHandler extends AbstractMovementPacketHandler {
         }
         boolean aggro = monster.isControllerHasAggro();
         if (toUse != null) {
-            c.announce(MaplePacketCreator.moveMonsterResponse(objectid, moveid, monster.getMp(), aggro, toUse.getSkillId(), toUse.getSkillLevel()));
+        	c.announce(MaplePacketCreator.moveMonsterResponse(objectid, moveid, monster.getMp(), aggro, toUse.getSkillId(), toUse.getSkillLevel()));
         } else {
             c.announce(MaplePacketCreator.moveMonsterResponse(objectid, moveid, monster.getMp(), aggro));
         }

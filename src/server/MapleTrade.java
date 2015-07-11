@@ -21,16 +21,18 @@
 */
 package server;
 
-import client.MapleCharacter;
-import client.inventory.Item;
-import client.inventory.MapleInventoryType;
-import constants.ItemConstants;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import tools.LogHelper;
 import tools.MaplePacketCreator;
+import client.MapleCharacter;
+import client.inventory.Item;
+import client.inventory.MapleInventoryType;
+import constants.ItemConstants;
 
 /**
  *
@@ -45,7 +47,8 @@ public class MapleTrade {
     boolean locked = false;
     private MapleCharacter chr;
     private byte number;
-
+    private boolean fullTrade = false;
+    
     public MapleTrade(byte number, MapleCharacter c) {
         chr = c;
         this.number = number;
@@ -179,6 +182,10 @@ public class MapleTrade {
         return new LinkedList<>(items);
     }
 
+    public int getExchangeMesos(){
+    	return exchangeMeso;
+    }
+    
     private boolean fitsInInventory() {
         MapleItemInformationProvider mii = MapleItemInformationProvider.getInstance();
         Map<MapleInventoryType, Integer> neededSlots = new LinkedHashMap<>();
@@ -214,7 +221,7 @@ public class MapleTrade {
             if (local.getChr().getLevel() < 15) {
                 if (local.getChr().getMesosTraded() + local.exchangeMeso > 1000000) {
                     cancelTrade(c);
-                    local.getChr().getClient().announce(MaplePacketCreator.sendMesoLimit());
+                    local.getChr().getClient().announce(MaplePacketCreator.serverNotice(1, "Characters under level 15 may not trade more than 1 million mesos per day."));
                     return;
                 } else {
                     local.getChr().addMesosTraded(local.exchangeMeso);
@@ -222,12 +229,13 @@ public class MapleTrade {
             } else if (c.getTrade().getChr().getLevel() < 15) {
                 if (c.getMesosTraded() + c.getTrade().exchangeMeso > 1000000) {
                     cancelTrade(c);
-                    c.getClient().announce(MaplePacketCreator.sendMesoLimit());
+                    c.getClient().announce(MaplePacketCreator.serverNotice(1, "Characters under level 15 may not trade more than 1 million mesos per day."));
                     return;
                 } else {
                     c.addMesosTraded(local.exchangeMeso);
                 }
             }
+            LogHelper.logTrade(local, partner);
             local.complete2();
             partner.complete2();
             partner.getChr().setTrade(null);
@@ -269,6 +277,8 @@ public class MapleTrade {
         if (c1.getTrade() != null && c1.getTrade().getPartner() == c2.getTrade() && c2.getTrade() != null && c2.getTrade().getPartner() == c1.getTrade()) {
             c2.getClient().announce(MaplePacketCreator.getTradePartnerAdd(c1));
             c1.getClient().announce(MaplePacketCreator.getTradeStart(c1.getClient(), c1.getTrade(), (byte) 1));
+            c1.getTrade().setFullTrade(true);
+            c2.getTrade().setFullTrade(true);
         } else {
             c1.message("The other player has already closed the trade.");
         }
@@ -287,4 +297,12 @@ public class MapleTrade {
             c.setTrade(null);
         }
     }
+
+	public boolean isFullTrade() {
+		return fullTrade;
+	}
+
+	public void setFullTrade(boolean fullTrade) {
+		this.fullTrade = fullTrade;
+	}
 }

@@ -57,6 +57,16 @@ public class MapleFoothold implements Comparable<MapleFoothold> {
 
     public int getY2() {
         return p2.y;
+    }    
+    
+    // XXX may need more precision
+    public int calculateFooting(int x) {
+        if (p1.y == p2.y) {
+            return p2.y; // y at both ends is the same
+        }
+        int slope = (p1.y - p2.y) / (p1.x - p2.x);
+        int intercept = p1.y - (slope * p1.x);
+        return (slope * x) + intercept;
     }
 
     public int compareTo(MapleFoothold o) {

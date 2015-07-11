@@ -21,6 +21,7 @@
 */
 package net.server.channel.handlers;
 
+import constants.ServerConstants;
 import client.MapleCharacter;
 import client.MapleClient;
 import net.AbstractMaplePacketHandler;
@@ -35,6 +36,9 @@ import tools.data.output.MaplePacketLittleEndianWriter;
 public final class FamilyUseHandler extends AbstractMaplePacketHandler {
     @Override
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+    	if (!ServerConstants.USE_FAMILY_SYSTEM){
+    		return;
+    	}
         int[] repCost = {3, 5, 7, 8, 10, 12, 15, 20, 25, 40, 50};
         final int type = slea.readInt();
         MapleCharacter victim;

@@ -25,8 +25,15 @@ import client.MapleCharacter;
 import client.MapleClient;
 import client.Skill;
 import client.SkillFactory;
+
 import java.awt.Point;
 import java.awt.Rectangle;
+
+import constants.skills.BlazeWizard;
+import constants.skills.Evan;
+import constants.skills.FPMage;
+import constants.skills.NightWalker;
+import constants.skills.Shadower;
 import server.MapleStatEffect;
 import server.life.MapleMonster;
 import server.life.MobSkill;
@@ -42,7 +49,7 @@ public class MapleMist extends AbstractMapleMapObject {
     private MapleMonster mob = null;
     private MapleStatEffect source;
     private MobSkill skill;
-    private boolean isMobMist, isPoisonMist;
+    private boolean isMobMist, isPoisonMist, isRecoveryMist;
     private int skillDelay;
 
     public MapleMist(Rectangle mistPosition, MapleMonster mob, MobSkill skill) {
@@ -51,6 +58,7 @@ public class MapleMist extends AbstractMapleMapObject {
         this.skill = skill;
         isMobMist = true;
         isPoisonMist = true;
+        isRecoveryMist = false;
         skillDelay = 0;
     }
 
@@ -60,13 +68,18 @@ public class MapleMist extends AbstractMapleMapObject {
         this.source = source;
         this.skillDelay = 8;
         this.isMobMist = false;
+        this.isRecoveryMist = false;
+        this.isPoisonMist = false;
         switch (source.getSourceId()) {
-            case 4221006: // Smoke Screen
+        	case Evan.RECOVERY_AURA:
+        		isRecoveryMist = true;
+        		break;
+            case Shadower.SMOKE_SCREEN: // Smoke Screen
                 isPoisonMist = false;
                 break;
-            case 2111003: // FP mist
-            case 12111005: // Flame Gear
-            case 14111006: // Poison Bomb
+            case FPMage.POISON_MIST: // FP mist
+            case BlazeWizard.FLAME_GEAR: // Flame Gear
+            case NightWalker.POISON_BOMB: // Poison Bomb
                 isPoisonMist = true;
                 break;
         }
@@ -94,6 +107,10 @@ public class MapleMist extends AbstractMapleMapObject {
         return isPoisonMist;
     }
 
+    public boolean isRecoveryMist() {
+    	return isRecoveryMist;
+    }
+    
     public int getSkillDelay() {
         return skillDelay;
     }

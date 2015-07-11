@@ -24,12 +24,15 @@ package net.server.channel.handlers;
 import client.*;
 import client.inventory.Equip;
 import client.inventory.Item;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import constants.ServerConstants;
 import net.AbstractMaplePacketHandler;
 import net.server.Server;
 import server.MTSItemInfo;
@@ -40,6 +43,9 @@ import tools.data.input.SeekableLittleEndianAccessor;
 public final class EnterMTSHandler extends AbstractMaplePacketHandler {
     @Override
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+    	if (!ServerConstants.USE_MTS){
+    		return;
+    	}
         MapleCharacter chr = c.getPlayer();
         if (!chr.isAlive()) {
             c.announce(MaplePacketCreator.enableActions());
@@ -70,7 +76,7 @@ public final class EnterMTSHandler extends AbstractMaplePacketHandler {
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 if (rs.getInt("type") != 1) {
-                    Item i = new Item(rs.getInt("itemid"), (byte) 0, (short) rs.getInt("quantity"));
+                    Item i = new Item(rs.getInt("itemid"), (short) 0, (short) rs.getInt("quantity"));
                     i.setOwner(rs.getString("owner"));
                     items.add(new MTSItemInfo(i, rs.getInt("price") + 100 + (int) (rs.getInt("price") * 0.1), rs.getInt("id"), rs.getInt("seller"), rs.getString("sellername"), rs.getString("sell_ends")));
                 } else {
@@ -123,7 +129,7 @@ public final class EnterMTSHandler extends AbstractMaplePacketHandler {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         if (rs.getInt("type") != 1) {
-                            Item i = new Item(rs.getInt("itemid"), (byte) 0, (short) rs.getInt("quantity"));
+                            Item i = new Item(rs.getInt("itemid"), (short) 0, (short) rs.getInt("quantity"));
                             i.setOwner(rs.getString("owner"));
                             items.add(new MTSItemInfo((Item) i, rs.getInt("price"), rs.getInt("id"), rs.getInt("seller"), rs.getString("sellername"), rs.getString("sell_ends")));
                         } else {
@@ -168,7 +174,7 @@ public final class EnterMTSHandler extends AbstractMaplePacketHandler {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         if (rs.getInt("type") != 1) {
-                            Item i = new Item(rs.getInt("itemid"), (byte) 0, (short) rs.getInt("quantity"));
+                            Item i = new Item(rs.getInt("itemid"), (short) 0, (short) rs.getInt("quantity"));
                             i.setOwner(rs.getString("owner"));
                             items.add(new MTSItemInfo((Item) i, rs.getInt("price"), rs.getInt("id"), rs.getInt("seller"), rs.getString("sellername"), rs.getString("sell_ends")));
                         } else {

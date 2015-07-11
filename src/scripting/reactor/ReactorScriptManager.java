@@ -52,9 +52,8 @@ public class ReactorScriptManager extends AbstractScriptManager {
         try {
             ReactorActionManager rm = new ReactorActionManager(c, reactor);
             Invocable iv = getInvocable("reactor/" + reactor.getId() + ".js", c);
-//            System.out.println(reactor.getId());
             if (iv == null) {
-                return;
+            	return;
             }
             engine.put("rm", rm);
             iv.invokeFunction("act");

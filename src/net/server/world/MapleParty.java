@@ -55,7 +55,7 @@ public class MapleParty {
 
     public void updateMember(MaplePartyCharacter member) {
         for (int i = 0; i < members.size(); i++) {
-            if (members.get(i).equals(member)) {
+            if (members.get(i).getId() == member.getId()) {
                 members.set(i, member);
             }
         }
@@ -73,7 +73,7 @@ public class MapleParty {
     public Collection<MaplePartyCharacter> getMembers() {
         return Collections.unmodifiableList(members);
     }
-
+    
     public int getId() {
         return id;
     }

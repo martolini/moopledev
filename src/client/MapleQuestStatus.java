@@ -58,7 +58,7 @@ public class MapleQuestStatus {
             return null;
         }
     }
-    private MapleQuest quest;
+    private short questID;
     private Status status;
     private Map<Integer, String> progress = new LinkedHashMap<Integer, String>();
     private List<Integer> medalProgress = new LinkedList<Integer>();
@@ -67,7 +67,7 @@ public class MapleQuestStatus {
     private int forfeited = 0;
 
     public MapleQuestStatus(MapleQuest quest, Status status) {
-        this.quest = quest;
+        this.questID = quest.getId();
         this.setStatus(status);
         this.completionTime = System.currentTimeMillis();
         if (status == Status.STARTED) 
@@ -75,7 +75,7 @@ public class MapleQuestStatus {
     }
 
     public MapleQuestStatus(MapleQuest quest, Status status, int npc) {
-        this.quest = quest;
+        this.questID = quest.getId();
         this.setStatus(status);
         this.setNpc(npc);
         this.completionTime = System.currentTimeMillis();
@@ -85,8 +85,12 @@ public class MapleQuestStatus {
     }
 
     public MapleQuest getQuest() {
-        return quest;
+        return MapleQuest.getInstance(questID);
     }
+	
+	public short getQuestID() {
+		return questID;
+	}
 
     public Status getStatus() {
         return status;
@@ -105,7 +109,7 @@ public class MapleQuestStatus {
     }
 
     private void registerMobs() {
-        for (int i : quest.getRelevantMobs()) {
+        for (int i : MapleQuest.getInstance(questID).getRelevantMobs()) {
             progress.put(i, "000");
         }
     }
@@ -135,7 +139,7 @@ public class MapleQuestStatus {
     }
 
     public void setProgress(int id, String pr) {
-        progress.put(id, pr);
+        	progress.put(id, pr);
     }
 
     public boolean madeProgress() {
@@ -161,6 +165,17 @@ public class MapleQuestStatus {
 
     public int getForfeited() {
         return forfeited;
+    }
+    
+    public String getInfo() {
+        if(!progress.containsKey(0) && !getMedalMaps().isEmpty()) {
+            return Integer.toString(getMedalProgress());
+        }
+        return getProgress(0);
+    }
+    
+    public void setInfo(String newInfo) {
+        progress.put(0, newInfo);
     }
 
     public void setForfeited(int forfeited) {

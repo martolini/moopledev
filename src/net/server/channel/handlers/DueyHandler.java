@@ -23,10 +23,13 @@ package net.server.channel.handlers;
 
 import client.MapleCharacter;
 import client.MapleClient;
+import client.autoban.AutobanFactory;
 import client.inventory.Equip;
 import client.inventory.Item;
 import client.inventory.MapleInventoryType;
 import constants.ItemConstants;
+import constants.ServerConstants;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,11 +37,13 @@ import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
+
 import net.AbstractMaplePacketHandler;
 import net.server.channel.Channel;
 import server.DueyPackages;
 import server.MapleInventoryManipulator;
 import tools.DatabaseConnection;
+import tools.FilePrinter;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 
@@ -93,6 +98,9 @@ public final class DueyHandler extends AbstractMaplePacketHandler {
 
     @Override
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+    	if (!ServerConstants.USE_DUEY){
+    		return;
+    	}
         byte operation = slea.readByte();
         if (operation == Actions.TOSERVER_SEND_ITEM.getCode()) {
             final int fee = 5000;
@@ -101,8 +109,11 @@ public final class DueyHandler extends AbstractMaplePacketHandler {
             short amount = slea.readShort();
             int mesos = slea.readInt();
             String recipient = slea.readMapleAsciiString();
-            if (mesos < 0 || (long) mesos > Integer.MAX_VALUE || ((long) mesos + fee + getFee(mesos)) > Integer.MAX_VALUE) {
-                return;
+            if (mesos < 0 || (long) mesos > Integer.MAX_VALUE || ((long) mesos + fee + getFee(mesos)) > Integer.MAX_VALUE || amount < 1) {
+            	AutobanFactory.PACKET_EDIT.alert(c.getPlayer(), c.getPlayer().getName() + " tried to packet edit with duey.");
+            	FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " tried to use duey with mesos " + mesos + " and amount " + amount + "\r\n");           	
+            	c.disconnect(true, false);
+            	return;
             }
             int finalcost = mesos + fee + getFee(mesos);
             boolean send = false;
@@ -133,12 +144,12 @@ public final class DueyHandler extends AbstractMaplePacketHandler {
             if (send) {
                 if (inventId > 0) {
                     MapleInventoryType inv = MapleInventoryType.getByType(inventId);
-                    Item item = c.getPlayer().getInventory(inv).getItem((byte) itemPos);
+                    Item item = c.getPlayer().getInventory(inv).getItem(itemPos);
                     if (item != null && c.getPlayer().getItemQuantity(item.getItemId(), false) > amount) {
                         if (ItemConstants.isRechargable(item.getItemId())) {
-                            MapleInventoryManipulator.removeFromSlot(c, inv, (byte) itemPos, item.getQuantity(), true);
+                            MapleInventoryManipulator.removeFromSlot(c, inv, itemPos, item.getQuantity(), true);
                         } else {
-                            MapleInventoryManipulator.removeFromSlot(c, inv, (byte) itemPos, amount, true, false);
+                            MapleInventoryManipulator.removeFromSlot(c, inv, itemPos, amount, true, false);
                         }
                         addItemToDB(item, amount, mesos, c.getPlayer().getName(), getAccIdFromCNAME(recipient, false));
                     } else {
@@ -353,7 +364,7 @@ public final class DueyHandler extends AbstractMaplePacketHandler {
                 eq.setOwner(rs.getString("owner"));
                 dueypack = new DueyPackages(rs.getInt("PackageId"), eq);
             } else if (rs.getInt("type") == 2) {
-                Item newItem = new Item(rs.getInt("itemid"), (byte) 0, (short) rs.getInt("quantity"));
+                Item newItem = new Item(rs.getInt("itemid"), (short) 0, (short) rs.getInt("quantity"));
                 newItem.setOwner(rs.getString("owner"));
                 dueypack = new DueyPackages(rs.getInt("PackageId"), newItem);
             } else {

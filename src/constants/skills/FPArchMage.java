@@ -33,5 +33,6 @@ public class FPArchMage {
     public static final int INFINITY = 2121004;
     public static final int ELQUINES = 2121005;
     public static final int PARALYZE = 2121006;
+    public static final int METEOR_SHOWER = 2121007;
     public static final int HEROS_WILL = 2121008;
 }

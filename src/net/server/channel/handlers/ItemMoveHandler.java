@@ -25,6 +25,7 @@ import client.MapleClient;
 import client.inventory.MapleInventoryType;
 import net.AbstractMaplePacketHandler;
 import server.MapleInventoryManipulator;
+import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 /**
@@ -34,6 +35,10 @@ import tools.data.input.SeekableLittleEndianAccessor;
 public final class ItemMoveHandler extends AbstractMaplePacketHandler {
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         slea.skip(4); 
+		if(c.getPlayer().getAutobanManager().getLastSpam(6) + 300 > System.currentTimeMillis()) {
+			c.announce(MaplePacketCreator.enableActions());
+			return;
+		}
         MapleInventoryType type = MapleInventoryType.getByType(slea.readByte());
         byte src = (byte) slea.readShort();
         byte action = (byte) slea.readShort();
@@ -47,5 +52,6 @@ public final class ItemMoveHandler extends AbstractMaplePacketHandler {
         } else {
             MapleInventoryManipulator.move(c, type, src, action);
         }
+		c.getPlayer().getAutobanManager().spam(6);
     }
 }

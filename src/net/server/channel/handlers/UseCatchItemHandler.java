@@ -40,7 +40,7 @@ public final class UseCatchItemHandler extends AbstractMaplePacketHandler {
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         MapleCharacter chr = c.getPlayer();
         AutobanManager abm = chr.getAutobanManager();
-        abm.setTimestamp(5, slea.readInt());
+        abm.setTimestamp(5, slea.readInt(), 3);
         slea.readShort();
         int itemId = slea.readInt();
         int monsterid = slea.readInt();

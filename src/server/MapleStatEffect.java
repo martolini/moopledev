@@ -21,6 +21,31 @@
  */
 package server;
 
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
+
+import net.server.world.MaplePartyCharacter;
+import provider.MapleData;
+import provider.MapleDataTool;
+import server.life.MapleMonster;
+import server.maps.FieldLimit;
+import server.maps.MapleDoor;
+import server.maps.MapleMap;
+import server.maps.MapleMapObject;
+import server.maps.MapleMapObjectType;
+import server.maps.MapleMist;
+import server.maps.MapleSummon;
+import server.maps.SummonMovementType;
+import tools.ArrayMap;
+import tools.MaplePacketCreator;
+import tools.Pair;
 import client.MapleBuffStat;
 import client.MapleCharacter;
 import client.MapleDisease;
@@ -52,6 +77,7 @@ import constants.skills.Crusader;
 import constants.skills.DarkKnight;
 import constants.skills.DawnWarrior;
 import constants.skills.DragonKnight;
+import constants.skills.Evan;
 import constants.skills.FPArchMage;
 import constants.skills.FPMage;
 import constants.skills.FPWizard;
@@ -85,30 +111,6 @@ import constants.skills.SuperGM;
 import constants.skills.ThunderBreaker;
 import constants.skills.WhiteKnight;
 import constants.skills.WindArcher;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ScheduledFuture;
-import net.server.PlayerCoolDownValueHolder;
-import provider.MapleData;
-import provider.MapleDataTool;
-import server.life.MapleMonster;
-import server.maps.FieldLimit;
-import server.maps.MapleDoor;
-import server.maps.MapleMap;
-import server.maps.MapleMapObject;
-import server.maps.MapleMapObjectType;
-import server.maps.MapleMist;
-import server.maps.MapleSummon;
-import server.maps.SummonMovementType;
-import tools.ArrayMap;
-import tools.MaplePacketCreator;
-import tools.Pair;
 
 /**
  * @author Matze
@@ -148,7 +150,7 @@ public class MapleStatEffect {
         }
     }
 
-    private static MapleStatEffect loadFromData(MapleData source, int sourceid, boolean skill, boolean overTime) {
+	private static MapleStatEffect loadFromData(MapleData source, int sourceid, boolean skill, boolean overTime) {
         MapleStatEffect ret = new MapleStatEffect();
         ret.duration = MapleDataTool.getIntConvert("time", source, -1);
         ret.hp = (short) MapleDataTool.getInt("hp", source, 0);
@@ -221,11 +223,13 @@ public class MapleStatEffect {
                 case Beginner.RECOVERY:
                 case Noblesse.RECOVERY:
                 case Legend.RECOVERY:
+                case Evan.RECOVERY:
                     statups.add(new Pair<>(MapleBuffStat.RECOVERY, Integer.valueOf(x)));
                     break;
                 case Beginner.ECHO_OF_HERO:
                 case Noblesse.ECHO_OF_HERO:
                 case Legend.ECHO_OF_HERO:
+                case Evan.ECHO_OF_HERO:
                     statups.add(new Pair<>(MapleBuffStat.ECHO_OF_HERO, Integer.valueOf(ret.x)));
                     break;
                 case Beginner.MONSTER_RIDER:
@@ -250,11 +254,13 @@ public class MapleStatEffect {
                     break;
                 case Beginner.BERSERK_FURY:
                 case Noblesse.BERSERK_FURY:
+                case Evan.BERSERK_FURY:
                     statups.add(new Pair<>(MapleBuffStat.BERSERK_FURY, Integer.valueOf(1)));
                     break;
                 case Beginner.INVINCIBLE_BARRIER:
                 case Noblesse.INVINCIBLE_BARRIER:
                 case Legend.INVICIBLE_BARRIER:
+                case Evan.INVINCIBLE_BARRIER:
                     statups.add(new Pair<>(MapleBuffStat.DIVINE_BODY, Integer.valueOf(1)));
                     break;
                 case Fighter.POWER_GUARD:
@@ -302,6 +308,7 @@ public class MapleStatEffect {
                 // MAGICIAN
                 case Magician.MAGIC_GUARD:
                 case BlazeWizard.MAGIC_GUARD:
+                case Evan.MAGIC_GUARD:
                     statups.add(new Pair<>(MapleBuffStat.MAGIC_GUARD, Integer.valueOf(x)));
                     break;
                 case Cleric.INVINCIBLE:
@@ -324,6 +331,18 @@ public class MapleStatEffect {
                 case Bishop.HOLY_SHIELD:
                     statups.add(new Pair<>(MapleBuffStat.HOLY_SHIELD, Integer.valueOf(x)));
                     break;
+                case BlazeWizard.ELEMENTAL_RESET:
+                case Evan.ELEMENTAL_RESET:
+                	statups.add(new Pair<>(MapleBuffStat.MAGIC_SHIELD, Integer.valueOf(x)));
+                	break;
+                case Evan.MAGIC_SHIELD:
+                    statups.add(new Pair<>(MapleBuffStat.MAGIC_SHIELD, Integer.valueOf(x)));
+                    break;
+                case Evan.MAGIC_RESISTANCE:
+                    statups.add(new Pair<>(MapleBuffStat.MAGIC_RESISTANCE, Integer.valueOf(x)));
+                    break;
+                case Evan.SLOW:
+                	statups.add(new Pair<>(MapleBuffStat.SLOW, Integer.valueOf(x)));
                 // BOWMAN
                 case Priest.MYSTIC_DOOR:
                 case Hunter.SOUL_ARROW:
@@ -371,7 +390,7 @@ public class MapleStatEffect {
                     break;
                 case ChiefBandit.PICKPOCKET:
                     statups.add(new Pair<>(MapleBuffStat.PICKPOCKET, Integer.valueOf(x)));
-                    break;
+                    break;                
                 case NightLord.SHADOW_STARS:
                     statups.add(new Pair<>(MapleBuffStat.SHADOW_CLAW, Integer.valueOf(0)));
                     break;
@@ -416,6 +435,7 @@ public class MapleStatEffect {
                 case WindArcher.BOW_BOOSTER:
                 case NightWalker.CLAW_BOOSTER:
                 case ThunderBreaker.KNUCKLER_BOOSTER:
+                case Evan.MAGIC_BOOSTER:
                     statups.add(new Pair<>(MapleBuffStat.BOOSTER, Integer.valueOf(x)));
                     break;
                 case Hero.MAPLE_WARRIOR:
@@ -431,6 +451,7 @@ public class MapleStatEffect {
                 case Corsair.MAPLE_WARRIOR:
                 case Buccaneer.MAPLE_WARRIOR:
                 case Aran.MAPLE_WARRIOR:
+                case Evan.MAPLE_WARRIOR:
                     statups.add(new Pair<>(MapleBuffStat.MAPLE_WARRIOR, Integer.valueOf(ret.x)));
                     break;
                 // SUMMON
@@ -459,6 +480,11 @@ public class MapleStatEffect {
                     statups.add(new Pair<>(MapleBuffStat.SUMMON, Integer.valueOf(1)));
                     break;
                 // ----------------------------- MONSTER STATUS ---------------------------------- //
+                case Crusader.ARMOR_CRASH:
+                case DragonKnight.POWER_CRASH:
+                case WhiteKnight.MAGIC_CRASH:
+                	monsterStatus.put(MonsterStatus.SEAL_SKILL,  Integer.valueOf(1));
+                	break;
                 case Rogue.DISORDER:
                     monsterStatus.put(MonsterStatus.WATK, Integer.valueOf(ret.x));
                     monsterStatus.put(MonsterStatus.WDEF, Integer.valueOf(ret.y));
@@ -489,6 +515,8 @@ public class MapleStatEffect {
                 case Gunslinger.BLANK_SHOT:
                 case DawnWarrior.COMA:
                 case Aran.ROLLING_SPIN:
+                case Evan.FIRE_BREATH:
+                case Evan.BLAZE:
                     monsterStatus.put(MonsterStatus.STUN, Integer.valueOf(1));
                     break;
                 case NightLord.TAUNT:
@@ -505,6 +533,7 @@ public class MapleStatEffect {
                 case Outlaw.ICE_SPLITTER:
                 case FPArchMage.PARALYZE:
                 case Aran.COMBO_TEMPEST:
+                case Evan.ICE_BREATH:
                     monsterStatus.put(MonsterStatus.FREEZE, Integer.valueOf(1));
                     ret.duration *= 2; // freezing skills are a little strange
                     break;
@@ -512,7 +541,7 @@ public class MapleStatEffect {
                 case ILWizard.SLOW:
                 case BlazeWizard.SLOW:
                     monsterStatus.put(MonsterStatus.SPEED, Integer.valueOf(ret.x));
-                    break;
+                    break;    
                 case FPWizard.POISON_BREATH:
                 case FPMage.ELEMENT_COMPOSITION:
                     monsterStatus.put(MonsterStatus.POISON, Integer.valueOf(1));
@@ -526,32 +555,33 @@ public class MapleStatEffect {
                     break;
                 case Hermit.SHADOW_WEB: // shadow web
                 case NightWalker.SHADOW_WEB:
-                    monsterStatus.put(MonsterStatus.SHADOW_WEB, 1);
+                    monsterStatus.put(MonsterStatus.SHADOW_WEB, Integer.valueOf(1));
                     break;
                 case FPArchMage.FIRE_DEMON:
                 case ILArchMage.ICE_DEMON:
                     monsterStatus.put(MonsterStatus.POISON, Integer.valueOf(1));
                     monsterStatus.put(MonsterStatus.FREEZE, Integer.valueOf(1));
                     break;
+                case Evan.PHANTOM_IMPRINT:
+                	monsterStatus.put(MonsterStatus.PHANTOM_IMPRINT, Integer.valueOf(x));
                 //ARAN
                 case Aran.COMBO_ABILITY:
-                    statups.add(new Pair<>(MapleBuffStat.ARAN_COMBO, 100));
+                    statups.add(new Pair<>(MapleBuffStat.ARAN_COMBO, Integer.valueOf(100)));
                     break;
                 case Aran.COMBO_BARRIER:
-                    statups.add(new Pair<>(MapleBuffStat.COMBO_BARRIER, ret.x));
+                    statups.add(new Pair<>(MapleBuffStat.COMBO_BARRIER, Integer.valueOf(ret.x)));
                     break;
                 case Aran.COMBO_DRAIN:
-                    statups.add(new Pair<>(MapleBuffStat.COMBO_DRAIN, ret.x));
+                    statups.add(new Pair<>(MapleBuffStat.COMBO_DRAIN, Integer.valueOf(ret.x)));
                     break;
                 case Aran.SMART_KNOCKBACK:
-                    statups.add(new Pair<>(MapleBuffStat.SMART_KNOCKBACK, ret.x));
+                    statups.add(new Pair<>(MapleBuffStat.SMART_KNOCKBACK, Integer.valueOf(ret.x)));
                     break;
                 case Aran.BODY_PRESSURE:
-                    statups.add(new Pair<>(MapleBuffStat.BODY_PRESSURE, ret.x));
+                    statups.add(new Pair<>(MapleBuffStat.BODY_PRESSURE, Integer.valueOf(ret.x)));
                     break;
                 case Aran.SNOW_CHARGE:
-                    monsterStatus.put(MonsterStatus.SPEED, ret.x);
-                    statups.add(new Pair<>(MapleBuffStat.WK_CHARGE, ret.y));
+                    statups.add(new Pair<>(MapleBuffStat.WK_CHARGE, Integer.valueOf(ret.duration)));
                     break;
                 default:
                     break;
@@ -613,6 +643,7 @@ public class MapleStatEffect {
         }
         int hpchange = calcHPChange(applyfrom, primary);
         int mpchange = calcMPChange(applyfrom, primary);
+        
         if (primary) {
             if (itemConNo != 0) {
                 MapleInventoryManipulator.removeById(applyto.getClient(), MapleItemInformationProvider.getInstance().getInventoryType(itemCon), itemCon, itemConNo, false, true);
@@ -656,17 +687,17 @@ public class MapleStatEffect {
             applyto.setMp(newMp);
             hpmpupdate.add(new Pair<>(MapleStat.MP, Integer.valueOf(applyto.getMp())));
         }
-        applyto.getClient().announce(MaplePacketCreator.updatePlayerStats(hpmpupdate, true));
+        applyto.getClient().announce(MaplePacketCreator.updatePlayerStats(hpmpupdate, true, applyto));
         if (moveTo != -1) {
-            if (applyto.getMap().getReturnMapId() != applyto.getMapId()) {
+            if (moveTo != applyto.getMapId()) {
                 MapleMap target;
                 if (moveTo == 999999999) {
                     target = applyto.getMap().getReturnMap();
                 } else {
                     target = applyto.getClient().getWorldServer().getChannel(applyto.getClient().getChannel()).getMapFactory().getMap(moveTo);
                     int targetid = target.getId() / 10000000;
-                    if (targetid != 60 && applyto.getMapId() / 10000000 != 61 && targetid != applyto.getMapId() / 10000000 && targetid != 21 && targetid != 20) {
-                        return false;
+                    if (targetid != 60 && applyto.getMapId() / 10000000 != 61 && targetid != applyto.getMapId() / 10000000 && targetid != 21 && targetid != 20 && targetid != 12 && (applyto.getMapId() / 10000000 != 10 && applyto.getMapId() / 10000000 != 12)) {
+                    	return false;
                     }
                 }
                 applyto.changeMap(target);
@@ -678,8 +709,8 @@ public class MapleStatEffect {
         if (isShadowClaw()) {
             int projectile = 0;
             MapleInventory use = applyto.getInventory(MapleInventoryType.USE);
-            for (int i = 0; i < 97; i++) { // impose order...
-                Item item = use.getItem((byte) i);
+            for (int i = 1; i <= use.getSlotLimit(); i++) { // impose order...
+                Item item = use.getItem((short) i);
                 if (item != null) {
                     if (ItemConstants.isThrowingStar(item.getItemId()) && item.getQuantity() >= 200) {
                         projectile = item.getItemId();
@@ -721,27 +752,40 @@ public class MapleStatEffect {
             }
         }
         if (isMagicDoor() && !FieldLimit.DOOR.check(applyto.getMap().getFieldLimit())) { // Magic Door
-            Point doorPosition = new Point(applyto.getPosition());
-            MapleDoor door = new MapleDoor(applyto, doorPosition);
-            applyto.getMap().spawnDoor(door);
-            applyto.addDoor(door);
-            door = new MapleDoor(door);
-            applyto.addDoor(door);
-            door.getTown().spawnDoor(door);
-            if (applyto.getParty() != null) {// update town doors
-                applyto.silentPartyUpdate();
-            }
-            applyto.disableDoor();
-        } else if (isMist()) {
-            Rectangle bounds = calculateBoundingBox(applyfrom.getPosition(), applyfrom.isFacingLeft());
-            MapleMist mist = new MapleMist(bounds, applyfrom, this);
-            applyfrom.getMap().spawnMist(mist, getDuration(), sourceid != Shadower.SMOKE_SCREEN, false);
-        } else if (isTimeLeap()) { // Time Leap
-            for (PlayerCoolDownValueHolder i : applyto.getAllCooldowns()) {
-                if (i.skillId != Buccaneer.TIME_LEAP) {
-                    applyto.removeCooldown(i.skillId);
+        	int y = applyto.getFh();
+        	if (y == 0) {
+        		y = applyto.getPosition().y;
+        	}
+            Point doorPosition = new Point(applyto.getPosition().x, y);
+            MapleDoor door = new MapleDoor(applyto, doorPosition);                     
+            if (applyto.getParty() != null) {// out of town door
+                for (MaplePartyCharacter partyMembers : applyto.getParty().getMembers()) {
+                	partyMembers.getPlayer().addDoor(door);
+                	partyMembers.updateDoor(door);
                 }
-            }
+                applyto.silentPartyUpdate();
+            } else {
+            	applyto.addDoor(door);
+            }   
+            applyto.getMap().spawnDoor(door);
+            door = new MapleDoor(door); //The town door
+            if (applyto.getParty() != null) {// update town doors
+                for (MaplePartyCharacter partyMembers : applyto.getParty().getMembers()) {
+                	partyMembers.getPlayer().addDoor(door);
+                	partyMembers.updateDoor(door);
+                }
+                applyto.silentPartyUpdate();
+            } else {
+            	applyto.addDoor(door);
+            }   
+            door.getTown().spawnDoor(door);
+            applyto.disableDoor();
+        }  else if (isMist()) {
+            Rectangle bounds = calculateBoundingBox(sourceid == NightWalker.POISON_BOMB ? pos : applyfrom.getPosition(), applyfrom.isFacingLeft());
+            MapleMist mist = new MapleMist(bounds, applyfrom, this);
+            applyfrom.getMap().spawnMist(mist, getDuration(), mist.isPoisonMist(), false, mist.isRecoveryMist());
+        } else if(isTimeLeap()) {
+            applyto.removeAllCooldownsExcept(Buccaneer.TIME_LEAP, true);
         }
         return true;
     }
@@ -756,11 +800,6 @@ public class MapleStatEffect {
                 if (affected != applyfrom && (isGmBuff() || applyfrom.getParty().equals(affected.getParty()))) {
                     if ((isResurrection() && !affected.isAlive()) || (!isResurrection() && affected.isAlive())) {
                         affectedp.add(affected);
-                    }
-                    if (isTimeLeap()) {
-                        for (PlayerCoolDownValueHolder i : affected.getAllCooldowns()) {
-                            affected.removeCooldown(i.skillId);
-                        }
                     }
                 }
             }
@@ -779,9 +818,16 @@ public class MapleStatEffect {
         int i = 0;
         for (MapleMapObject mo : affected) {
             MapleMonster monster = (MapleMonster) mo;
-            if (makeChanceResult()) {
-                monster.applyStatus(applyfrom, new MonsterStatusEffect(getMonsterStati(), skill_, null, false), isPoison(), getDuration());
-            }
+            if (isDispel()) { 
+        		monster.debuffMob(skill_.getId());
+        	} else {
+        		if (makeChanceResult()) {
+        			monster.applyStatus(applyfrom, new MonsterStatusEffect(getMonsterStati(), skill_, null, false), isPoison(), getDuration());
+        			if (isCrash()) {
+        				monster.debuffMob(skill_.getId());
+        			}
+        		}
+        	}
             i++;
             if (i >= mobCount) {
                 break;
@@ -844,7 +890,7 @@ public class MapleStatEffect {
         MapleMount givemount = null;
         if (isMonsterRiding()) {
             int ridingLevel = 0;
-            Item mount = applyfrom.getInventory(MapleInventoryType.EQUIPPED).getItem((byte) -18);
+            Item mount = applyfrom.getInventory(MapleInventoryType.EQUIPPED).getItem((short) -18);
             if (mount != null) {
                 ridingLevel = mount.getItemId();
             }
@@ -899,10 +945,10 @@ public class MapleStatEffect {
             }
             if (isDash()) {
                 buff = MaplePacketCreator.givePirateBuff(statups, sourceid, seconds);
-                mbuff = MaplePacketCreator.giveForeignDash(applyto.getId(), sourceid, seconds, localstatups);
+                mbuff = MaplePacketCreator.giveForgeinPirateBuff(applyto.getId(), sourceid, seconds, localstatups);
             } else if (isInfusion()) {
-                buff = MaplePacketCreator.givePirateBuff(statups, sourceid, seconds);
-                mbuff = MaplePacketCreator.giveForeignInfusion(applyto.getId(), x, localDuration);
+            	buff = MaplePacketCreator.givePirateBuff(localstatups, sourceid, seconds);
+                mbuff = MaplePacketCreator.giveForgeinPirateBuff(applyto.getId(), sourceid, seconds, localstatups);
             } else if (isDs()) {
                 List<Pair<MapleBuffStat, Integer>> dsstat = Collections.singletonList(new Pair<>(MapleBuffStat.DARKSIGHT, 0));
                 mbuff = MaplePacketCreator.giveForeignBuff(applyto.getId(), dsstat);
@@ -928,12 +974,6 @@ public class MapleStatEffect {
             } else if (isMorph()) {
                 List<Pair<MapleBuffStat, Integer>> stat = Collections.singletonList(new Pair<>(MapleBuffStat.MORPH, Integer.valueOf(getMorph(applyto))));
                 mbuff = MaplePacketCreator.giveForeignBuff(applyto.getId(), stat);
-            } else if (isTimeLeap()) {
-                for (PlayerCoolDownValueHolder i : applyto.getAllCooldowns()) {
-                    if (i.skillId != Buccaneer.TIME_LEAP) {
-                        applyto.removeCooldown(i.skillId);
-                    }
-                }
             }
             long starttime = System.currentTimeMillis();
             CancelEffectAction cancelAction = new CancelEffectAction(applyto, this, starttime);
@@ -941,7 +981,9 @@ public class MapleStatEffect {
             applyto.registerEffect(this, starttime, schedule);
 
             if (buff != null) {
-                applyto.getClient().announce(buff);
+            	if (!hasNoIcon()) { //Thanks flav for such a simple release! :)
+            		applyto.getClient().announce(buff);
+            	}
             }
             if (mbuff != null) {
                 applyto.getMap().broadcastMessage(applyto, mbuff, false);
@@ -1004,8 +1046,9 @@ public class MapleStatEffect {
                 double mod = 1.0;
                 boolean isAFpMage = applyfrom.getJob().isA(MapleJob.FP_MAGE);
                 boolean isCygnus = applyfrom.getJob().isA(MapleJob.BLAZEWIZARD2);
-                if (isAFpMage || isCygnus || applyfrom.getJob().isA(MapleJob.IL_MAGE)) {
-                    Skill amp = isAFpMage ? SkillFactory.getSkill(FPMage.ELEMENT_AMPLIFICATION) : (isCygnus ? SkillFactory.getSkill(BlazeWizard.ELEMENT_AMPLIFICATION) : SkillFactory.getSkill(ILMage.ELEMENT_AMPLIFICATION));
+                boolean isEvan = applyfrom.getJob().isA(MapleJob.EVAN7);
+                if (isAFpMage || isCygnus || isEvan || applyfrom.getJob().isA(MapleJob.IL_MAGE)) {
+                    Skill amp = isAFpMage ? SkillFactory.getSkill(FPMage.ELEMENT_AMPLIFICATION) : (isCygnus ? SkillFactory.getSkill(BlazeWizard.ELEMENT_AMPLIFICATION) : (isEvan ? SkillFactory.getSkill(Evan.MAGIC_AMPLIFICATION) : SkillFactory.getSkill(ILMage.ELEMENT_AMPLIFICATION)));
                     int ampLevel = applyfrom.getSkillLevel(amp);
                     if (ampLevel > 0) {
                         mod = amp.getEffect(ampLevel).getX() / 100.0;
@@ -1050,6 +1093,7 @@ public class MapleStatEffect {
             case Beginner.ECHO_OF_HERO:
             case Noblesse.ECHO_OF_HERO:
             case Legend.ECHO_OF_HERO:
+            case Evan.ECHO_OF_HERO:	
             case SuperGM.HEAL_PLUS_DISPEL:
             case SuperGM.HASTE:
             case SuperGM.HOLY_SYMBOL:
@@ -1079,6 +1123,11 @@ public class MapleStatEffect {
             case BlazeWizard.SLOW:
             case BlazeWizard.SEAL:
             case NightWalker.SHADOW_WEB:
+            case Crusader.ARMOR_CRASH:
+            case DragonKnight.POWER_CRASH:
+            case WhiteKnight.MAGIC_CRASH:
+            case Priest.DISPEL:
+            case SuperGM.HEAL_PLUS_DISPEL:
                 return true;
         }
         return false;
@@ -1154,11 +1203,19 @@ public class MapleStatEffect {
     }
 
     public boolean isPoison() {
-        return skill && (sourceid == FPMage.POISON_MIST || sourceid == FPWizard.POISON_BREATH || sourceid == FPMage.ELEMENT_COMPOSITION || sourceid == NightWalker.POISON_BOMB);
+        return skill && (sourceid == FPMage.POISON_MIST || sourceid == FPWizard.POISON_BREATH || sourceid == FPMage.ELEMENT_COMPOSITION || sourceid == NightWalker.POISON_BOMB || sourceid == BlazeWizard.FLAME_GEAR);
+    }
+    
+    public boolean isMorph() {
+        return morphId > 0;
+    }
+    
+    public boolean isMorphWithoutAttack() {
+        return morphId > 0 && morphId < 100; // Every morph item I have found has been under 100, pirate skill transforms start at 1000.
     }
 
     private boolean isMist() {
-        return skill && (sourceid == FPMage.POISON_MIST || sourceid == Shadower.SMOKE_SCREEN || sourceid == BlazeWizard.FLAME_GEAR || sourceid == NightWalker.POISON_BOMB);
+        return skill && (sourceid == FPMage.POISON_MIST || sourceid == Shadower.SMOKE_SCREEN || sourceid == BlazeWizard.FLAME_GEAR || sourceid == NightWalker.POISON_BOMB || sourceid == Evan.RECOVERY_AURA);
     }
 
     private boolean isSoulArrow() {
@@ -1169,6 +1226,10 @@ public class MapleStatEffect {
         return skill && sourceid == NightLord.SHADOW_STARS;
     }
 
+    private boolean isCrash() {
+    	return skill && (sourceid == DragonKnight.POWER_CRASH || sourceid == Crusader.ARMOR_CRASH || sourceid == WhiteKnight.MAGIC_CRASH);
+    }
+    
     private boolean isDispel() {
         return skill && (sourceid == Priest.DISPEL || sourceid == SuperGM.HEAL_PLUS_DISPEL);
     }
@@ -1210,10 +1271,6 @@ public class MapleStatEffect {
 
     private boolean isCygnusFA() {
         return skill && (sourceid == DawnWarrior.FINAL_ATTACK || sourceid == WindArcher.FINAL_ATTACK);
-    }
-
-    private boolean isMorph() {
-        return morphId > 0;
     }
 
     private boolean isComboReset() {
@@ -1268,6 +1325,17 @@ public class MapleStatEffect {
         return null;
     }
 
+    
+    public boolean hasNoIcon() {
+        return (sourceid == 3111002 || sourceid == 3211002 || + // puppet, puppet
+                sourceid == 3211005 || sourceid == 2311002 || + // golden eagle, mystic door
+                sourceid == 2121005 || sourceid == 2221005 || + // elquines, ifrit
+                sourceid == 2321003 || sourceid == 3121006 || + // bahamut, phoenix
+                sourceid == 3221005 || sourceid == 3111005 || + // frostprey, silver hawk
+                sourceid == 2311006 || sourceid == 5220002 || + // summon dragon, wrath of the octopi
+                sourceid == 5211001 || sourceid == 5211002); // octopus, gaviota
+    }
+    
     public boolean isSkill() {
         return skill;
     }
@@ -1319,6 +1387,10 @@ public class MapleStatEffect {
 
     public short getMatk() {
         return matk;
+    }
+    
+    public short getWatk() {
+        return watk;
     }
 
     public int getDuration() {

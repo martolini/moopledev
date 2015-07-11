@@ -33,25 +33,29 @@ public final class HealOvertimeHandler extends AbstractMaplePacketHandler {
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         MapleCharacter chr = c.getPlayer();
         AutobanManager abm = chr.getAutobanManager();
-        abm.setTimestamp(0, slea.readInt());
+        int timestamp = slea.readInt();
+        abm.setTimestamp(0, timestamp, 3);
         slea.skip(4);
         short healHP = slea.readShort();
         if (healHP != 0) {
-            if ((abm.getLastSpam(0) + 1500) > System.currentTimeMillis()) AutobanFactory.FAST_HP_HEALING.addPoint(abm, "Fast hp healing");
-            if (healHP > 140) {
-                AutobanFactory.HIGH_HP_HEALING.autoban(chr, "Healing: " + healHP + "; Max is 140.");
+            if ((abm.getLastSpam(0) + 1500) > timestamp) AutobanFactory.FAST_HP_HEALING.addPoint(abm, "Fast hp healing");
+            
+            int abHeal = 140;
+            if(chr.getMapId() == 105040401 || chr.getMapId() == 105040402 || chr.getMapId() == 809000101 || chr.getMapId() == 809000201) abHeal += 40; // Sleepywood sauna and showa spa...
+            if (healHP > abHeal) {
+                AutobanFactory.HIGH_HP_HEALING.autoban(chr, "Healing: " + healHP + "; Max is " + abHeal + ".");
                 return;
             }
             chr.addHP(healHP);
             //chr.getMap().broadcastMessage(chr, MaplePacketCreator.showHpHealed(chr.getId(), healHP), false);
             chr.checkBerserk();
-            abm.spam(0);
+            abm.spam(0, timestamp);
         }
         short healMP = slea.readShort();
         if (healMP != 0 && healMP < 1000) {
-            if ((abm.getLastSpam(1) + 1500) > System.currentTimeMillis()) AutobanFactory.FAST_MP_HEALING.addPoint(abm, "Fast mp healing");
+            if ((abm.getLastSpam(1) + 1500) > timestamp) AutobanFactory.FAST_MP_HEALING.addPoint(abm, "Fast mp healing");
             chr.addMP(healMP);
-            abm.spam(1);
+            abm.spam(1, timestamp);
         }
     }
 }

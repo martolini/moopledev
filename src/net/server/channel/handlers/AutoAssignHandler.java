@@ -24,6 +24,7 @@ package net.server.channel.handlers;
 import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleStat;
+import client.autoban.AutobanFactory;
 import net.AbstractMaplePacketHandler;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
@@ -43,6 +44,11 @@ public class AutoAssignHandler extends AbstractMaplePacketHandler {
         }
         int total = 0;
         int extras = 0;
+        if(slea.available() < 16) {
+            AutobanFactory.PACKET_EDIT.alert(chr, "Didn't send full packet for Auto Asign.");
+            c.disconnect(false, false);
+            return;
+        }
         for (int i = 0; i < 2; i++) {
             int type = slea.readInt();
             int tempVal = slea.readInt();

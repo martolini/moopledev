@@ -10,7 +10,8 @@ import java.util.Calendar;
 
 public class FilePrinter {
 
-    public static final String ACCOUNT_STUCK = "accountStuck.txt",
+    public static final String 
+    		ACCOUNT_STUCK = "accountStuck.txt",
             EXCEPTION_CAUGHT = "exceptionCaught.txt",
             CLIENT_START = "clientStartError.txt",
             ADD_PLAYER = "addPlayer.txt",
@@ -31,12 +32,23 @@ public class FilePrinter {
             SAVE_CHAR = "saveToDB.txt",
             INSERT_CHAR = "insertCharacter.txt",
             LOAD_CHAR = "loadCharFromDB.txt",
-            SESSION = "sessions.txt";//more to come (maps)
+            UNHANDLED_EVENT = "doesNotExist.txt",
+            SESSION = "sessions.txt",
+            EXPLOITS = "exploits/",
+            STORAGE = "storage/",
+            PACKET_LOGS = "packetlogs/",
+            DELETED_CHARACTERS = "deletedchars/",
+            FREDRICK = "fredrick/",
+    		NPC_UNCODED = "uncodedNPCs.txt",
+    		QUEST_UNCODED = "uncodedQuests.txt",
+            SAVING_CHARACTER = "saveChar.txt";//more to come (maps)
     private static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
     private static final String FILE_PATH = "logs/" + sdf.format(Calendar.getInstance().getTime()) + "/";// + sdf.format(Calendar.getInstance().getTime()) + "/"
     private static final String ERROR = "error/";
 
     public static void printError(final String name, final Throwable t) {
+    	System.out.println("Error thrown: " + name);
+    	System.out.println(getString(t));
         FileOutputStream out = null;
         final String file = FILE_PATH + ERROR + name;
         try {
@@ -59,6 +71,8 @@ public class FilePrinter {
     }
 
     public static void printError(final String name, final Throwable t, final String info) {
+    	System.out.println("Error thrown: " + name);
+    	System.out.println(getString(t));
         FileOutputStream out = null;
         final String file = FILE_PATH + ERROR + name;
         try {
@@ -82,6 +96,8 @@ public class FilePrinter {
     }
 
     public static void printError(final String name, final String s) {
+    	System.out.println("Error thrown: " + name);
+    	System.out.println(s);
         FileOutputStream out = null;
         final String file = FILE_PATH + ERROR + name;
         try {
@@ -108,6 +124,8 @@ public class FilePrinter {
     }
 
     public static void print(final String name, final String s, boolean line) {
+    	System.out.println("Error thrown: " + name);
+    	System.out.println(s);
         FileOutputStream out = null;
         String file = FILE_PATH + name;
         try {

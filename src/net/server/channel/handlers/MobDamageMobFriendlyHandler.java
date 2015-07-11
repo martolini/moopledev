@@ -18,29 +18,46 @@
 
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 package net.server.channel.handlers;
 
-import client.MapleClient;
-import tools.Randomizer;
 import net.AbstractMaplePacketHandler;
+import server.life.MapleMonster;
+import server.maps.MapleMap;
 import tools.MaplePacketCreator;
+import tools.Randomizer;
 import tools.data.input.SeekableLittleEndianAccessor;
+import client.MapleClient;
 
 /**
  *
  * @author Xotic & BubblesDev
  */
+
 public final class MobDamageMobFriendlyHandler extends AbstractMaplePacketHandler {
-    public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        int attacker = slea.readInt();
-        slea.readInt(); //charId
-        int damaged = slea.readInt();
-        int damage = Randomizer.nextInt(((c.getPlayer().getMap().getMonsterByOid(damaged).getMaxHp() / 13 + c.getPlayer().getMap().getMonsterByOid(attacker).getPADamage() * 10)) * 2 + 500); //Beng's formula.
-        if (c.getPlayer().getMap().getMonsterByOid(damaged) == null || c.getPlayer().getMap().getMonsterByOid(attacker) == null) {
-            return;
-        }
-        c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.MobDamageMobFriendly(c.getPlayer().getMap().getMonsterByOid(damaged), damage), c.getPlayer().getMap().getMonsterByOid(damaged).getPosition());
-        c.announce(MaplePacketCreator.enableActions());
-    }
+	public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
+		int attacker = slea.readInt();
+		slea.readInt();
+		int damaged = slea.readInt();
+		MapleMonster monster = c.getPlayer().getMap().getMonsterByOid(damaged);
+
+		if (monster == null || c.getPlayer().getMap().getMonsterByOid(attacker) == null) {
+			return;
+		}
+
+		int damage = Randomizer.nextInt(((monster.getMaxHp() / 13 + monster.getPADamage() * 10)) * 2 + 500) / 10; //Beng's formula.
+		//  int damage = monster.getStats().getPADamage() + monster.getStats().getPDDamage() - 1;
+
+		if (monster.getId() == 9300061) {
+			if (monster.getHp() - damage < 1) {
+				monster.getMap().broadcastMessage(MaplePacketCreator.serverNotice(6, "The Moon Bunny went home because he was sick."));
+				c.getPlayer().getEventInstance().getMapInstance(monster.getMap().getId()).killFriendlies(monster);
+			}
+			MapleMap map = c.getPlayer().getEventInstance().getMapInstance(monster.getMap().getId());
+			map.addBunnyHit();
+		}
+
+		c.getPlayer().getMap().broadcastMessage(MaplePacketCreator.MobDamageMobFriendly(monster, damage), monster.getPosition());
+		c.announce(MaplePacketCreator.enableActions());
+	}
 }

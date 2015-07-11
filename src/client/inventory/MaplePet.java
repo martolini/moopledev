@@ -49,12 +49,12 @@ public class MaplePet extends Item {
     private int stance;
     private boolean summoned;
 
-    private MaplePet(int id, byte position, int uniqueid) {
+    private MaplePet(int id, short position, int uniqueid) {
         super(id, position, (short) 1);
         this.uniqueid = uniqueid;
     }
 
-    public static MaplePet loadFromDb(int itemid, byte position, int petid) {
+    public static MaplePet loadFromDb(int itemid, short position, int petid) {
         try {
             MaplePet ret = new MaplePet(itemid, position, petid);
             PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("SELECT name, level, closeness, fullness, summoned FROM pets WHERE petid = ?"); // Get pet details..

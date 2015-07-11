@@ -26,7 +26,7 @@ public class WeddingHandler extends AbstractMaplePacketHandler {
         byte operation = slea.readByte();
         switch (operation) {
             case 0x06://Add an item to the Wedding Registry
-                byte slot = (byte) slea.readShort();
+                short slot = slea.readShort();
                 int itemid = slea.readInt();
                 short quantity = slea.readShort();
                 MapleInventoryType type = MapleItemInformationProvider.getInstance().getInventoryType(itemid);

@@ -43,7 +43,7 @@ public final class UseItemHandler extends AbstractMaplePacketHandler {
         }
         MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         slea.readInt();
-        byte slot = (byte) slea.readShort();
+        short slot = slea.readShort();
         int itemId = slea.readInt();
         Item toUse = c.getPlayer().getInventory(MapleInventoryType.USE).getItem(slot);
         if (toUse != null && toUse.getQuantity() > 0 && toUse.getItemId() == itemId) {
@@ -51,8 +51,17 @@ public final class UseItemHandler extends AbstractMaplePacketHandler {
                 c.getPlayer().dispelDebuffs();
                 remove(c, slot);
                 return;
+			} else if (itemId == 2050001) {
+				c.getPlayer().dispelDebuff(MapleDisease.DARKNESS);
+                remove(c, slot);
+                return;
+			} else if (itemId == 2050002) {
+				c.getPlayer().dispelDebuff(MapleDisease.WEAKEN);
+                remove(c, slot);
+                return;
             } else if (itemId == 2050003) {
                 c.getPlayer().dispelDebuff(MapleDisease.SEAL);
+				c.getPlayer().dispelDebuff(MapleDisease.CURSE);
                 remove(c, slot);
                 return;
             }
@@ -60,7 +69,6 @@ public final class UseItemHandler extends AbstractMaplePacketHandler {
                 if (ii.getItemEffect(toUse.getItemId()).applyTo(c.getPlayer())) {
                     remove(c, slot);
                 }
-                c.announce(MaplePacketCreator.enableActions());
                 return;
             }
             remove(c, slot);
@@ -69,7 +77,7 @@ public final class UseItemHandler extends AbstractMaplePacketHandler {
         }
     }
 
-    private void remove(MapleClient c, byte slot) {
+    private void remove(MapleClient c, short slot) {
         MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, slot, (short) 1, false);
         c.announce(MaplePacketCreator.enableActions());
     }

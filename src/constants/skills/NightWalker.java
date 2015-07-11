@@ -29,6 +29,7 @@ public class NightWalker {
     public static final int ALCHEMIST = 14110003;
     public static final int DISORDER = 14001002;
     public static final int DARK_SIGHT = 14001003;
+    public static final int LUCKY_SEVEN = 14001004;
     public static final int DARKNESS = 14001005;
     public static final int CLAW_BOOSTER = 14101002;
     public static final int CLAW_MASTERY = 14100000;

@@ -28,11 +28,12 @@ import server.quest.MapleQuest;
 import tools.MaplePacketCreator;
 
 public class MapScriptMethods extends AbstractPlayerInteraction {
-
-    public MapScriptMethods(MapleClient c) {
+   
+	private String rewardstring = " title has been rewarded. Please see NPC Dalair to receive your Medal.";
+    
+	public MapScriptMethods(MapleClient c) {
         super(c);
     }
-    String rewardstring = " title has been rewarded. Please see NPC Dalair to receive your Medal.";
 
     public void displayAranIntro() {
         switch (c.getPlayer().getMapId()) {
@@ -97,11 +98,11 @@ public class MapScriptMethods extends AbstractPlayerInteraction {
             return;
         }
         String status = Integer.toString(q.getMedalProgress());
-        int infoex = quest.getInfoEx();
-        getPlayer().announce(MaplePacketCreator.questProgress(quest.getInfoNumber(), status));
+        String infoex = quest.getInfoEx();
+        getPlayer().announce(MaplePacketCreator.updateQuest(q, true));
         StringBuilder smp = new StringBuilder();
         StringBuilder etm = new StringBuilder();
-        if (q.getMedalProgress() == infoex) {
+        if (status.equals(infoex)) {
             etm.append("Earned the ").append(questName).append(" title!");
             smp.append("You have earned the <").append(questName).append(">").append(rewardstring);
             getPlayer().announce(MaplePacketCreator.getShowQuestCompletion(quest.getId()));
@@ -126,10 +127,10 @@ public class MapScriptMethods extends AbstractPlayerInteraction {
             return;
         }
         String status = Integer.toString(q.getMedalProgress());
-        getPlayer().announce(MaplePacketCreator.questProgress(quest.getInfoNumber(), status));
+        getPlayer().announce(MaplePacketCreator.updateQuest(q, true));
         getPlayer().announce(MaplePacketCreator.earnTitleMessage(status + "/5 Completed"));
         getPlayer().announce(MaplePacketCreator.earnTitleMessage("The One Who's Touched the Sky title in progress."));
-        if (q.getMedalProgress() == quest.getInfoEx()) {
+        if (Integer.toString(q.getMedalProgress()).equals(quest.getInfoEx())) {
             showInfoText("The One Who's Touched the Sky" + rewardstring);
             getPlayer().announce(MaplePacketCreator.getShowQuestCompletion(quest.getId()));
         } else {

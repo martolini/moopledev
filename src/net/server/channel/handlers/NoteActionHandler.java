@@ -22,14 +22,14 @@
 package net.server.channel.handlers;
 
 import java.sql.PreparedStatement;
-import client.MapleClient;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import tools.DatabaseConnection;
-import tools.data.input.SeekableLittleEndianAccessor;
+
 import net.AbstractMaplePacketHandler;
+import tools.DatabaseConnection;
 import tools.MaplePacketCreator;
+import tools.data.input.SeekableLittleEndianAccessor;
+import client.MapleClient;
 
 public final class NoteActionHandler extends AbstractMaplePacketHandler {
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {

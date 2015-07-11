@@ -32,6 +32,10 @@ public final class AutoAggroHandler extends AbstractMaplePacketHandler {
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         int oid = slea.readInt();
         MapleMonster monster = c.getPlayer().getMap().getMonsterByOid(oid);
+        
+        if(c.getPlayer().isHidden())
+            return; // Don't auto aggro GM's in hide...
+        
         if (monster != null && monster.getController() != null) {
             if (!monster.isControllerHasAggro()) {
                 if (c.getPlayer().getMap().getCharacterById(monster.getController().getId()) == null) {

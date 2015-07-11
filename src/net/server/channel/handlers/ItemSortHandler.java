@@ -21,47 +21,55 @@
  */
 package net.server.channel.handlers;
 
-import client.MapleCharacter;
-import client.MapleClient;
-import client.inventory.MapleInventory;
-import client.inventory.MapleInventoryType;
+import constants.ServerConstants;
 import net.AbstractMaplePacketHandler;
 import server.MapleInventoryManipulator;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.inventory.MapleInventory;
+import client.inventory.MapleInventoryType;
 
 public final class ItemSortHandler extends AbstractMaplePacketHandler {
 
     @Override
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        MapleCharacter chr = c.getPlayer();
-        chr.getAutobanManager().setTimestamp(2, slea.readInt());
-        byte inv = slea.readByte();
-        if (inv > 0 && inv <= 5) {
-            boolean sorted = false;
-            MapleInventoryType pInvType = MapleInventoryType.getByType(inv);
-            MapleInventory pInv = chr.getInventory(pInvType);
-            while (!sorted) {
-                byte freeSlot = pInv.getNextFreeSlot();
-                if (freeSlot != -1) {
-                    byte itemSlot = -1;
-                    for (int i = freeSlot + 1; i <= pInv.getSlotLimit(); i++) {
-                        if (pInv.getItem((byte) i) != null) {
-                            itemSlot = (byte) i;
-                            break;
-                        }
-                    }
-                    if (itemSlot <= 96 && itemSlot >= 1) {
-                        MapleInventoryManipulator.move(c, pInvType, itemSlot, freeSlot);
-                    } else {
-                        sorted = true;
-                    }
-                } else {
-                    sorted = true;
-                }
-            }
-            c.announce(MaplePacketCreator.finishedSort(inv));
-        }
-        c.announce(MaplePacketCreator.enableActions());
+    	MapleCharacter chr = c.getPlayer();
+		chr.getAutobanManager().setTimestamp(2, slea.readInt(), 3);
+		MapleInventoryType inventoryType = MapleInventoryType.getByType(slea.readByte());
+		if (inventoryType.equals(MapleInventoryType.UNDEFINED) || c.getPlayer().getInventory(inventoryType).isFull()) {
+		    c.getSession().write(MaplePacketCreator.enableActions());
+		    return;
+		}
+		if(!chr.isGM() || !ServerConstants.USE_ITEM_SORT) {
+			c.announce(MaplePacketCreator.enableActions());
+			return;
+		}
+		
+		MapleInventory inventory = c.getPlayer().getInventory(inventoryType);
+		boolean sorted = false;
+		
+		while (!sorted) {
+			short freeSlot = inventory.getNextFreeSlot();
+		    if (freeSlot != -1) {
+		        short itemSlot = -1;
+		        for (short i = (short) (freeSlot + 1); i <= inventory.getSlotLimit(); i = (short) (i + 1)) {
+		            if (inventory.getItem(i) != null) {
+		                itemSlot = i;
+		                break;
+		            }
+		        }
+		        if (itemSlot > 0) {
+		            MapleInventoryManipulator.move(c, inventoryType,  itemSlot, freeSlot);
+		        } else {
+		            sorted = true;
+		        }
+		    } else {
+		        sorted = true;
+		    }
+		}
+		c.getSession().write(MaplePacketCreator.finishedSort(inventoryType.getType()));
+		c.getSession().write(MaplePacketCreator.enableActions());
     }
 }

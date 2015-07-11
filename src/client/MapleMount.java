@@ -96,13 +96,19 @@ public class MapleMount {
         }
     }
 
-    public void increaseTiredness() {
-        this.tiredness++;
-        owner.getMap().broadcastMessage(MaplePacketCreator.updateMount(owner.getId(), this, false));
-        if (tiredness > 99) {
-            this.tiredness = 95;
-            owner.dispelSkill(owner.getJobType() * 10000000 + 1004);
-        }
+    private void increaseTiredness() {
+		if(owner != null) {
+			this.tiredness++;
+			owner.getMap().broadcastMessage(MaplePacketCreator.updateMount(owner.getId(), this, false));
+			if (tiredness > 99) {
+				this.tiredness = 95;
+				owner.dispelSkill(owner.getJobType() * 10000000 + 1004);
+			}
+		} else {
+			if(this.tirednessSchedule != null) {
+				this.tirednessSchedule.cancel(false);
+			}
+		}
     }
 
     public void setExp(int newexp) {

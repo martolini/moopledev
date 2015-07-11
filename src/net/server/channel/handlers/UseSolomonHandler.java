@@ -39,7 +39,7 @@ public final class UseSolomonHandler extends AbstractMaplePacketHandler {
     @Override
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         slea.readInt();
-        byte slot = (byte) slea.readShort();
+        short slot = slea.readShort();
         int itemId = slea.readInt();
         MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         Item slotItem = c.getPlayer().getInventory(MapleInventoryType.USE).getItem(slot);

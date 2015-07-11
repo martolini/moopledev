@@ -26,9 +26,9 @@ import java.awt.Point;
 public abstract class AbstractLifeMovement implements LifeMovement {
     private Point position;
     private int duration;
-    private byte newstate, type;
+    private int newstate, type;
 
-    public AbstractLifeMovement(byte type, Point position, int duration, byte newstate) {
+    public AbstractLifeMovement(int type, Point position, int duration, int newstate) {
         super();
         this.type = type;
         this.position = position;
@@ -37,7 +37,7 @@ public abstract class AbstractLifeMovement implements LifeMovement {
     }
 
     @Override
-    public byte getType() {
+    public int getType() {
         return this.type;
     }
 
@@ -47,7 +47,7 @@ public abstract class AbstractLifeMovement implements LifeMovement {
     }
 
     @Override
-    public byte getNewstate() {
+    public int getNewstate() {
         return newstate;
     }
 

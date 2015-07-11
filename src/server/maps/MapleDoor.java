@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import client.MapleCharacter;
-import client.MapleClient;
-import net.server.world.MaplePartyCharacter;
+
 import server.MaplePortal;
 import tools.MaplePacketCreator;
+import client.MapleCharacter;
+import client.MapleClient;
 
 /**
  *
@@ -85,8 +85,7 @@ public class MapleDoor extends AbstractMapleMapObject {
         for (MapleMapObject obj : town.getMapObjects()) {
             if (obj instanceof MapleDoor) {
                 MapleDoor door = (MapleDoor) obj;
-                if (door.getOwner().getParty() != null &&
-                        owner.getParty().containsMembers(door.getOwner().getMPC())) {
+                if (door.getOwner().getParty() != null && door.getOwner().getParty().containsMembers(door.getOwner().getMPC())) {
                     freePortals.remove(door.getTownPortal());
                 }
             }
@@ -101,7 +100,9 @@ public class MapleDoor extends AbstractMapleMapObject {
             if (owner.getParty() != null && (owner == client.getPlayer() || owner.getParty().containsMembers(client.getPlayer().getMPC()))) {
                 client.announce(MaplePacketCreator.partyPortal(town.getId(), target.getId(), targetPosition));
             }
-            client.announce(MaplePacketCreator.spawnPortal(town.getId(), target.getId(), targetPosition));
+        }
+        if (owner.getId() != client.getPlayer().getId()) {
+        	client.announce(MaplePacketCreator.spawnPortal(town.getId(), target.getId(), targetPosition));
         }
     }
 
@@ -152,4 +153,5 @@ public class MapleDoor extends AbstractMapleMapObject {
     public MapleMapObjectType getType() {
         return MapleMapObjectType.DOOR;
     }
+    
 }

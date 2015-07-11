@@ -21,12 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package net.server.channel;
 
-import client.MapleCharacter;
-import constants.ServerConstants;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -34,11 +31,13 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock.WriteLock;
+
 import net.MapleServerHandler;
 import net.mina.MapleCodecFactory;
 import net.server.PlayerStorage;
 import net.server.world.MapleParty;
 import net.server.world.MaplePartyCharacter;
+
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
 import org.apache.mina.core.filterchain.IoFilter;
@@ -47,6 +46,7 @@ import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.SocketSessionConfig;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
+
 import provider.MapleDataProviderFactory;
 import scripting.event.EventScriptManager;
 import server.TimerManager;
@@ -57,6 +57,8 @@ import server.maps.HiredMerchant;
 import server.maps.MapleMap;
 import server.maps.MapleMapFactory;
 import tools.MaplePacketCreator;
+import client.MapleCharacter;
+import constants.ServerConstants;
 
 public final class Channel {
 
@@ -68,18 +70,19 @@ public final class Channel {
     private MapleMapFactory mapFactory;
     private EventScriptManager eventSM;
     private Map<Integer, HiredMerchant> hiredMerchants = new HashMap<>();
-    private ReentrantReadWriteLock merchant_lock = new ReentrantReadWriteLock(true);
-    private EnumMap<MapleExpeditionType, MapleExpedition> expeditions = new EnumMap<>(MapleExpeditionType.class);
+    private final Map<Integer, Integer> storedVars = new HashMap<>();
+	private ReentrantReadWriteLock merchant_lock = new ReentrantReadWriteLock(true);
+    private List<MapleExpedition> expeditions = new ArrayList<>();
+    private List<MapleExpeditionType> expedType = new ArrayList<>();
     private MapleEvent event;
     private boolean finishedShutdown = false;
-
+    
     public Channel(final int world, final int channel) {
         this.world = world;
         this.channel = channel;
         this.mapFactory = new MapleMapFactory(MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/Map.wz")), MapleDataProviderFactory.getDataProvider(new File(System.getProperty("wzpath") + "/String.wz")), world, channel);
-
         try {
-            eventSM = new EventScriptManager(this, ServerConstants.EVENTS.split(" "));
+            eventSM = new EventScriptManager(this, getEvents());
             port = 7575 + this.channel - 1;
             port += (world * 100);
             ip = ServerConstants.HOST + ":" + port;
@@ -92,12 +95,22 @@ public final class Channel {
             acceptor.getFilterChain().addLast("codec", (IoFilter) new ProtocolCodecFilter(new MapleCodecFactory()));
             acceptor.bind(new InetSocketAddress(port));
             ((SocketSessionConfig) acceptor.getSessionConfig()).setTcpNoDelay(true);
-
+            for (MapleExpeditionType exped : MapleExpeditionType.values()) {
+            	expedType.add(exped);
+            }
             eventSM.init();
+            
             System.out.println("    Channel " + getId() + ": Listening on port " + port);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+    
+    public void reloadEventScriptManager(){
+    	eventSM.cancel();
+    	eventSM = null;
+    	eventSM = new EventScriptManager(this, getEvents());
+    	eventSM.init();
     }
 
     public final void shutdown() {
@@ -125,6 +138,7 @@ public final class Channel {
                 hmit.remove();
             }
         } catch (Exception e) {
+			e.printStackTrace();
         } finally {
             wlock.unlock();
         }
@@ -160,7 +174,7 @@ public final class Channel {
             chr.announce(data);
         }
     }
-
+    
     public final int getId() {
         return channel;
     }
@@ -189,26 +203,6 @@ public final class Channel {
         }
     }
 
-    public void broadcastGMPacket(final byte[] data, String exclude) {
-        for (MapleCharacter chr : players.getAllCharacters()) {
-            if (chr.isGM() && !chr.getName().equals(exclude)) {
-                chr.announce(data);
-            }
-        }
-    }
-
-    public void yellowWorldMessage(String msg) {
-        for (MapleCharacter mc : getPlayerStorage().getAllCharacters()) {
-            mc.announce(MaplePacketCreator.sendYellowTip(msg));
-        }
-    }
-
-    public void worldMessage(String msg) {
-        for (MapleCharacter mc : getPlayerStorage().getAllCharacters()) {
-            mc.dropMessage(msg);
-        }
-    }
-
     public List<MapleCharacter> getPartyMembers(MapleParty party) {
         List<MapleCharacter> partym = new ArrayList<>(8);
         for (MaplePartyCharacter partychar : party.getMembers()) {
@@ -220,10 +214,8 @@ public final class Channel {
             }
         }
         return partym;
-
-
     }
-
+        
     public class respawnMaps implements Runnable {
 
         @Override
@@ -276,19 +268,11 @@ public final class Channel {
         }
         return retArr;
     }
-
-    public boolean hasExpedition(MapleExpeditionType type) {
-        return expeditions.containsKey(type);
+    
+    public List<MapleExpedition> getExpeditions() {
+    	return expeditions;
     }
-
-    public void addExpedition(MapleExpeditionType type, MapleExpedition exped) {
-        expeditions.put(type, exped);
-    }
-
-    public MapleExpedition getExpedition(MapleExpeditionType type) {
-        return expeditions.get(type);
-    }
-
+    
     public boolean isConnected(String name) {
         return getPlayerStorage().getCharacterByName(name) != null;
     }
@@ -300,5 +284,23 @@ public final class Channel {
     public void setServerMessage(String message) {
         this.serverMessage = message;
         broadcastPacket(MaplePacketCreator.serverMessage(message));
+    }
+    
+    private static String [] getEvents(){
+    	List<String> events = new ArrayList<String>();
+    	for (File file : new File("scripts/event").listFiles()){
+    		events.add(file.getName().substring(0, file.getName().length() - 3));
+    	}
+    	return events.toArray(new String[0]);
+    }
+	
+	public int getStoredVar(int key) {
+		if(storedVars.containsKey(key))
+            return storedVars.get(key);
+        return 0;
+    }
+    
+    public void setStoredVar(int key, int val) {
+        this.storedVars.put(key, val);
     }
 }

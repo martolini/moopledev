@@ -190,7 +190,7 @@ public final class GuildOperationHandler extends AbstractMaplePacketHandler {
                     System.out.println("[hax] " + mc.getName() + " tried to quit guild under the name \"" + name + "\" and current guild id of " + mc.getGuildId() + ".");
                     return;
                 }
-
+                c.announce(MaplePacketCreator.updateGP(mc.getGuildId(), 0));
                 Server.getInstance().leaveGuild(mc.getMGC());
                 c.announce(MaplePacketCreator.showGuildInfo(null));
                 mc.setGuildId(0);

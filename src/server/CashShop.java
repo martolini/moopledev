@@ -21,12 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package server;
 
-import client.inventory.Equip;
-import client.inventory.Item;
-import client.inventory.ItemFactory;
-import client.inventory.MapleInventoryType;
-import client.inventory.MaplePet;
-import constants.ItemConstants;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,12 +30,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import provider.MapleData;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
 import provider.MapleDataTool;
 import tools.DatabaseConnection;
 import tools.Pair;
+import client.inventory.Equip;
+import client.inventory.Item;
+import client.inventory.ItemFactory;
+import client.inventory.MapleInventoryType;
+import client.inventory.MaplePet;
+import constants.ItemConstants;
 
 /*
  * @author Flav
@@ -99,8 +100,11 @@ public class CashShop {
             }
 
             if (ItemConstants.EXPIRING_ITEMS)
-                item.setExpiration(period == 1 ? System.currentTimeMillis() + (1000 * 60 * 60 * 4 * period) : System.currentTimeMillis() + (1000 * 60 * 60 * 24 * period));
-
+				if(itemId == 5211048 || itemId == 5360042) { // 4 Hour 2X coupons, the period is 1, but we don't want them to last a day.
+					item.setExpiration(System.currentTimeMillis() + (1000 * 60 * 60 * 4));
+				} else {
+					item.setExpiration(System.currentTimeMillis() + (1000 * 60 * 60 * 24 * period));
+				}
             item.setSN(sn);
             return item;
         }
@@ -427,8 +431,7 @@ public class CashShop {
         notes--;
     }
 
-    public void save() throws SQLException {
-        Connection con = DatabaseConnection.getConnection();
+    public void save(Connection con) throws SQLException {
         PreparedStatement ps = con.prepareStatement("UPDATE `accounts` SET `nxCredit` = ?, `maplePoint` = ?, `nxPrepaid` = ? WHERE `id` = ?");
         ps.setInt(1, nxCredit);
         ps.setInt(2, maplePoint);
@@ -442,10 +445,11 @@ public class CashShop {
             itemsWithType.add(new Pair<>(item, MapleItemInformationProvider.getInstance().getInventoryType(item.getItemId())));
         }
 
-        factory.saveItems(itemsWithType, accountId);
+        factory.saveItems(itemsWithType, accountId, con);
         ps = con.prepareStatement("DELETE FROM `wishlists` WHERE `charid` = ?");
         ps.setInt(1, characterId);
         ps.executeUpdate();
+		ps.close();
         ps = con.prepareStatement("INSERT INTO `wishlists` VALUES (DEFAULT, ?, ?)");
         ps.setInt(1, characterId);
 

@@ -29,7 +29,7 @@ import java.util.Random;
 public class Item implements Comparable<Item> {
 
     private int id, cashId, sn;
-    private byte position;
+    private short position;
     private short quantity;
     private int petid = -1;
     private MaplePet pet = null;
@@ -39,7 +39,7 @@ public class Item implements Comparable<Item> {
     private long expiration = -1;
     private String giftFrom = "";
 
-    public Item(int id, byte position, short quantity) {
+    public Item(int id, short position, short quantity) {
         this.id = id;
         this.position = position;
         this.quantity = quantity;
@@ -47,7 +47,7 @@ public class Item implements Comparable<Item> {
         this.flag = 0;
     }
 
-    public Item(int id, byte position, short quantity, int petid) {
+    public Item(int id, short position, short quantity, int petid) {
         this.id = id;
         this.position = position;
         this.quantity = quantity;
@@ -66,7 +66,7 @@ public class Item implements Comparable<Item> {
         return ret;
     }
 
-    public void setPosition(byte position) {
+    public void setPosition(short position) {
         this.position = position;
     }
 
@@ -85,7 +85,7 @@ public class Item implements Comparable<Item> {
         return cashId;
     }
 
-    public byte getPosition() {
+    public short getPosition() {
         return position;
     }
 
@@ -115,16 +115,16 @@ public class Item implements Comparable<Item> {
     public void setPetId(int id) {
         this.petid = id;
     }
-
+ 
     public int compareTo(Item other) {
         if (this.id < other.getItemId()) {
             return -1;
         } else if (this.id > other.getItemId()) {
             return 1;
         }
-        return 0;
+         return 0;
     }
-
+    
     @Override
     public String toString() {
         return "Item: " + id + " quantity: " + quantity;
@@ -168,5 +168,5 @@ public class Item implements Comparable<Item> {
 
     public MaplePet getPet() {
         return pet;
-    }
+    }     
 }

@@ -34,7 +34,7 @@ public final class ItemConstants {
     public final static int UNTRADEABLE = 0x08;
     public final static int KARMA = 0x10;
     public final static int PET_COME = 0x80;
-    public final static int UNKNOWN_SKILL = 0x100;
+    public final static int ACCOUNT_SHARING = 0x100;
     public final static float ITEM_ARMOR_EXP = 1 / 350000;
     public static final float ITEM_WEAPON_EXP = 1 / 700000;
 
@@ -44,7 +44,7 @@ public final class ItemConstants {
         if (type == 128) {
             return PET_COME;
         } else if (type == 256) {
-            return UNKNOWN_SKILL;
+            return ACCOUNT_SHARING;
         }
         return 0;
     }
@@ -58,7 +58,7 @@ public final class ItemConstants {
     }
 
     public static boolean isRechargable(int itemId) {
-        return itemId / 10000 == 233 || itemId / 10000 == 207;
+        return isThrowingStar(itemId) || isBullet(itemId);
     }
 
     public static boolean isArrowForCrossBow(int itemId) {

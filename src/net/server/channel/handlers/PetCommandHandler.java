@@ -68,6 +68,7 @@ public final class PetCommandHandler extends AbstractMaplePacketHandler {
                     c.announce(MaplePacketCreator.showOwnPetLevelUp(chr.getPetIndex(pet)));
                     chr.getMap().broadcastMessage(MaplePacketCreator.showPetLevelUp(c.getPlayer(), chr.getPetIndex(pet)));
                 }
+                pet.saveToDb();
                 Item petz = chr.getInventory(MapleInventoryType.CASH).getItem(pet.getPosition());
                 chr.forceUpdateItem(petz);
             }

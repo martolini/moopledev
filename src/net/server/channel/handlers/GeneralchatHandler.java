@@ -21,17 +21,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package net.server.channel.handlers;
 
-import client.MapleCharacter;
+import tools.LogHelper;
+import tools.FilePrinter;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
+import client.MapleCharacter;
 import client.MapleClient;
+import client.autoban.AutobanFactory;
 import client.command.Commands;
 
-public final class GeneralchatHandler extends net.AbstractMaplePacketHandler {
-
+public final class GeneralChatHandler extends net.AbstractMaplePacketHandler {
+	
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         String s = slea.readMapleAsciiString();
         MapleCharacter chr = c.getPlayer();
+		if(chr.getAutobanManager().getLastSpam(7) + 200 > System.currentTimeMillis()) {
+			return;
+		}
+        if (s.length() > Byte.MAX_VALUE && !chr.isGM()) {
+        	AutobanFactory.PACKET_EDIT.alert(c.getPlayer(), c.getPlayer().getName() + " tried to packet edit in General Chat.");
+        	FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " tried to send text with length of " + s.length() + "\r\n");
+        	c.disconnect(true, false);
+        	return;
+        }
         char heading = s.charAt(0);
         if (heading == '/' || heading == '!' || heading == '@') {
             String[] sp = s.split(" ");
@@ -41,14 +53,26 @@ public final class GeneralchatHandler extends net.AbstractMaplePacketHandler {
                     if (!Commands.executeGMCommand(c, sp, heading)) {
                         Commands.executeAdminCommand(c, sp, heading);
                     }
+                    String command = "";
+                    for (String used : sp) {
+                    	command += used + " ";
+                    }
+                    FilePrinter.printError("usedCommands.txt", c.getPlayer().getName() + " used: " + heading + command + "\r\n");
                 }
             }
         } else {
-            if (!chr.isHidden())
-                chr.getMap().broadcastMessage(MaplePacketCreator.getChatText(chr.getId(), s, chr.isGM(), slea.readByte()));
-            else
-                chr.getMap().broadcastGMMessage(MaplePacketCreator.getChatText(chr.getId(), s, chr.isGM(), slea.readByte()));
+        	int show = slea.readByte();
+			if(chr.getMap().isMuted() && !chr.isGM()) {
+				chr.dropMessage(5, "The map you are in is currently muted. Please try again later.");
+				return;
+			}
+            if (!chr.isHidden()){
+            	chr.getMap().broadcastMessage(MaplePacketCreator.getChatText(chr.getId(), s, chr.getWhiteChat(), show));	
+            } else {
+                chr.getMap().broadcastGMMessage(MaplePacketCreator.getChatText(chr.getId(), s, chr.getWhiteChat(), show));
+            }
         }
+		chr.getAutobanManager().spam(7);
     }
 }
 

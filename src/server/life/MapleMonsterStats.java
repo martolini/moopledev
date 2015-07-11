@@ -36,7 +36,7 @@ import tools.Pair;
  * @author Frz
  */
 public class MapleMonsterStats {
-    private int exp, hp, mp, level, PADamage, dropPeriod, cp, buffToGive, removeAfter;
+    private int exp, hp, mp, level, PADamage, PDDamage, MADamage, MDDamage, dropPeriod, cp, buffToGive, removeAfter;
     private boolean boss, undead, ffaLoot, isExplosiveReward, firstAttack, removeOnMiss;
     private String name;
     private Map<String, Integer> animationTimes = new HashMap<String, Integer>();
@@ -48,6 +48,7 @@ public class MapleMonsterStats {
     private BanishInfo banish = null;
     private List<loseItem> loseItem = null;
     private selfDestruction selfDestruction = null;
+    private boolean friendly;
 
     public int getExp() {
         return exp;
@@ -291,4 +292,36 @@ public class MapleMonsterStats {
     public Pair<Integer, Integer> getCool() {
         return cool;
     }
+    
+    public int getPDDamage() {
+        return PDDamage;
+    }
+    
+    public int getMADamage() {
+        return MADamage;
+    }
+    
+    public int getMDDamage() {
+        return MDDamage;
+    }
+    
+    public boolean isFriendly() {
+        return friendly;
+    }
+    
+    public void setFriendly(boolean value) {
+        this.friendly = value;
+    }
+    
+    public void setPDDamage(int PDDamage) {
+        this.PDDamage = PDDamage;
+    }
+    
+    public void setMADamage(int MADamage) {
+        this.MADamage = MADamage;
+    }
+    
+    public void setMDDamage(int MDDamage) {
+        this.MDDamage = MDDamage;
+    } 
 }

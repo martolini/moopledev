@@ -63,7 +63,7 @@ public final class RingActionHandler extends AbstractMaplePacketHandler {
                 }
                 break;
             case 2:
-                byte type = slea.readByte();
+                slea.readByte(); //type
             case 3: //Drop Ring
                 /*
                 if (player.getPartner() != null) {

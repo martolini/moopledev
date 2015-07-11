@@ -29,14 +29,6 @@ public class MapleMessengerCharacter {
     private int channel;
     private boolean online;
 
-    public MapleMessengerCharacter(MapleCharacter maplechar) {
-        this.name = maplechar.getName();
-        this.channel = maplechar.getClient().getChannel();
-        this.id = maplechar.getId();
-        this.online = true;
-        this.position = 0;
-    }
-
     public MapleMessengerCharacter(MapleCharacter maplechar, int position) {
         this.name = maplechar.getName();
         this.channel = maplechar.getClient().getChannel();

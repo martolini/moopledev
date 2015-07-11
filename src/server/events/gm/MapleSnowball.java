@@ -35,8 +35,8 @@ import tools.MaplePacketCreator;
 public class MapleSnowball {
     private MapleMap map;
     private int position = 0;
-    private int hits = 25;
-    private int snowmanhp = 7500;
+    private int hits = 3;
+    private int snowmanhp = 1000;
     private boolean hittable = false;
     private int team;
     private boolean winner = false;
@@ -134,7 +134,7 @@ public class MapleSnowball {
             else if (this.position == 560)
                 map.getSnowball(team == 0 ? 1 : 0).message(3);
                 
-            this.hits = 25;
+            this.hits = 3;
             map.broadcastMessage(MaplePacketCreator.rollSnowBall(false, 0, map.getSnowball(0), map.getSnowball(1)));
             map.broadcastMessage(MaplePacketCreator.rollSnowBall(false, 1, map.getSnowball(0), map.getSnowball(1)));
         }

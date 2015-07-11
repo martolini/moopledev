@@ -21,28 +21,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package net;
 
-import client.MapleClient;
-import constants.ServerConstants;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Random;
+
 import net.server.Server;
+
 import org.apache.mina.core.service.IoHandlerAdapter;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.core.session.IoSession;
+
 import tools.FilePrinter;
 import tools.MapleAESOFB;
+import tools.MapleLogger;
 import tools.MaplePacketCreator;
 import tools.data.input.ByteArrayByteStream;
 import tools.data.input.GenericSeekableLittleEndianAccessor;
 import tools.data.input.SeekableLittleEndianAccessor;
+import client.MapleClient;
+import constants.ServerConstants;
 
 public class MapleServerHandler extends IoHandlerAdapter {
 
     private PacketProcessor processor;
     private int world = -1, channel = -1;
     private static final SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm");
-
+    
     public MapleServerHandler() {
         this.processor = PacketProcessor.getProcessor(-1, -1);
     }
@@ -55,7 +60,7 @@ public class MapleServerHandler extends IoHandlerAdapter {
 
     @Override
     public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
-        if (cause instanceof IOException || cause instanceof ClassCastException) {
+    	if (cause instanceof IOException || cause instanceof ClassCastException) {
             return;
         }
         MapleClient mc = (MapleClient) session.getAttribute(MapleClient.CLIENT_KEY);
@@ -89,6 +94,8 @@ public class MapleServerHandler extends IoHandlerAdapter {
         MapleClient client = new MapleClient(sendCypher, recvCypher, session);
         client.setWorld(world);
         client.setChannel(channel);
+        Random r = new Random();
+        client.setSessionId(r.nextLong()); // Generates a random session id.  
         session.write(MaplePacketCreator.getHello(ServerConstants.VERSION, ivSend, ivRecv));
         session.setAttribute(MapleClient.CLIENT_KEY, client);
     }
@@ -107,7 +114,7 @@ public class MapleServerHandler extends IoHandlerAdapter {
                 FilePrinter.printError(FilePrinter.ACCOUNT_STUCK, t);
             } finally {
                 session.close();
-                session.removeAttribute(MapleClient.CLIENT_KEY);
+                session.removeAttribute(MapleClient.CLIENT_KEY);      
                 //client.empty();
             }
         }
@@ -120,10 +127,10 @@ public class MapleServerHandler extends IoHandlerAdapter {
         SeekableLittleEndianAccessor slea = new GenericSeekableLittleEndianAccessor(new ByteArrayByteStream(content));
         short packetId = slea.readShort();
         MapleClient client = (MapleClient) session.getAttribute(MapleClient.CLIENT_KEY);
-        
         final MaplePacketHandler packetHandler = processor.getHandler(packetId);
         if (packetHandler != null && packetHandler.validateState(client)) {
             try {
+            	MapleLogger.logRecv(client, packetId, message);
                 packetHandler.handlePacket(slea, client);
             } catch (final Throwable t) {
                 FilePrinter.printError(FilePrinter.PACKET_HANDLER + packetHandler.getClass().getName() + ".txt", t, "Error for " + (client.getPlayer() == null ? "" : "player ; " + client.getPlayer() + " on map ; " + client.getPlayer().getMapId() + " - ") + "account ; " + client.getAccountName() + "\r\n" + slea.toString());
@@ -131,7 +138,14 @@ public class MapleServerHandler extends IoHandlerAdapter {
             }
         }
     }
-
+    
+    @Override
+    public void messageSent(IoSession session, Object message) {
+    	byte[] content = (byte[]) message;
+    	SeekableLittleEndianAccessor slea = new GenericSeekableLittleEndianAccessor(new ByteArrayByteStream(content));
+    	slea.readShort(); //packetId
+    }
+    
     @Override
     public void sessionIdle(final IoSession session, final IdleStatus status) throws Exception {
         MapleClient client = (MapleClient) session.getAttribute(MapleClient.CLIENT_KEY);

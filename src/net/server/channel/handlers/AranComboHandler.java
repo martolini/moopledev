@@ -38,7 +38,7 @@ public class AranComboHandler extends AbstractMaplePacketHandler {
         if (GameConstants.isAran(player.getJob().getId()) && (skillLevel > 0 || player.getJob().getId() == 2000)) {
             final long currentTime = System.currentTimeMillis();
             short combo = player.getCombo();
-            if ((currentTime - player.getLastCombo()) > 3500 && combo > 0) {
+            if ((currentTime - player.getLastCombo()) > 3000 && combo > 0) {
                 combo = 0;                
             }
             combo++;

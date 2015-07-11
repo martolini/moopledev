@@ -119,9 +119,8 @@ public class MapleStorage {
         this.slots = set;
     }
 
-    public void saveToDB() {
+    public void saveToDB(Connection con) {
         try {
-            Connection con = DatabaseConnection.getConnection();
             try (PreparedStatement ps = con.prepareStatement("UPDATE storages SET slots = ?, meso = ? WHERE storageid = ?")) {
                 ps.setInt(1, slots);
                 ps.setInt(2, meso);
@@ -134,7 +133,7 @@ public class MapleStorage {
                 itemsWithType.add(new Pair<>(item, MapleItemInformationProvider.getInstance().getInventoryType(item.getItemId())));
             }
 
-            ItemFactory.STORAGE.saveItems(itemsWithType, id);
+            ItemFactory.STORAGE.saveItems(itemsWithType, id, con);
         } catch (SQLException ex) {
             ex.printStackTrace();
         }

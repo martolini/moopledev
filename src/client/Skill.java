@@ -31,10 +31,12 @@ public class Skill {
     public List<MapleStatEffect> effects = new ArrayList<>();
     public Element element;
     public int animationTime;
+    public int job;
     public boolean action;
 
     public Skill(int id) {
         this.id = id;
+        this.job = id / 10000;
     }
 
     public int getId() {
@@ -50,7 +52,13 @@ public class Skill {
     }
 
     public boolean isFourthJob() {
-        return (id / 10000) % 10 == 2;
+        if (job == 2212) {
+        	return false;
+        }
+        if (id == 22170001 || id == 22171003 || id == 22171004 || id == 22181002 || id == 22181003) {
+        	return true;
+        }
+    	return job % 10 == 2;
     }
 
     public Element getElement() {

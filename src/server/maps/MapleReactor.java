@@ -22,8 +22,10 @@
 package server.maps;
 
 import client.MapleClient;
+
 import java.awt.Rectangle;
 import java.util.List;
+
 import scripting.reactor.ReactorScriptManager;
 import server.TimerManager;
 import tools.MaplePacketCreator;
@@ -124,6 +126,12 @@ public class MapleReactor extends AbstractMapleMapObject {
         return MaplePacketCreator.spawnReactor(this);
     }
 
+	public void forceHitReactor(final byte newState) {
+		setState((byte) newState);
+		setTimerActive(false);
+		map.broadcastMessage(MaplePacketCreator.triggerReactor(this, (short) 0));
+	}
+    
     public void delayedHitReactor(final MapleClient c, long delay) {
         TimerManager.getInstance().schedule(new Runnable() {
             @Override
@@ -137,44 +145,47 @@ public class MapleReactor extends AbstractMapleMapObject {
         hitReactor(0, (short) 0, 0, c);
     }
 
-    public void hitReactor(int charPos, short stance, int skillid, MapleClient c) {
+    public synchronized void hitReactor(int charPos, short stance, int skillid, MapleClient c) {
         try {
-        if (stats.getType(state) < 999 && stats.getType(state) != -1) {//type 2 = only hit from right (kerning swamp plants), 00 is air left 02 is ground left
-            if (!(stats.getType(state) == 2 && (charPos == 0 || charPos == 2))) { //get next state
-                for (byte b = 0; b < stats.getStateSize(state); b++) {//YAY?
-                    List<Integer> activeSkills = stats.getActiveSkills(state, b);
-                    if (activeSkills != null) {
-                        if (!activeSkills.contains(skillid)) continue;
-                    }
-                    state = stats.getNextState(state, b);
-                    if (stats.getNextState(state, b) == -1) {//end of reactor
-                        if (stats.getType(state) < 100) {//reactor broken
-                            if (delay > 0) {
-                                map.destroyReactor(getObjectId());
-                            } else {//trigger as normal
-                                map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance));
-                            }
-                        } else {//item-triggered on final step
-                            map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance));
-                        }
-                        ReactorScriptManager.getInstance().act(c, this);
-                    } else { //reactor not broken yet
-                        map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance));
-                        if (state == stats.getNextState(state, b)) {//current state = next state, looping reactor
-                            ReactorScriptManager.getInstance().act(c, this);
-                        }
-                    }
-                    break;
-                }
-            }
-        } else {
-            state++;
-            map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance));
-            ReactorScriptManager.getInstance().act(c, this);
-        }
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+			if(!this.isAlive()) {
+				return;
+			}
+			if (stats.getType(state) < 999 && stats.getType(state) != -1) {//type 2 = only hit from right (kerning swamp plants), 00 is air left 02 is ground left
+				if (!(stats.getType(state) == 2 && (charPos == 0 || charPos == 2))) { //get next state
+					for (byte b = 0; b < stats.getStateSize(state); b++) {//YAY?
+						List<Integer> activeSkills = stats.getActiveSkills(state, b);
+						if (activeSkills != null) {
+							if (!activeSkills.contains(skillid)) continue;
+						}
+						state = stats.getNextState(state, b);
+						if (stats.getNextState(state, b) == -1) {//end of reactor
+							if (stats.getType(state) < 100) {//reactor broken
+								if (delay > 0) {
+									map.destroyReactor(getObjectId());
+								} else {//trigger as normal
+									map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance));
+								}
+							} else {//item-triggered on final step
+								map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance));
+							}
+							ReactorScriptManager.getInstance().act(c, this);
+						} else { //reactor not broken yet
+							map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance));
+							if (state == stats.getNextState(state, b)) {//current state = next state, looping reactor
+								ReactorScriptManager.getInstance().act(c, this);
+							}
+						}
+						break;
+					}
+				}
+			} else {
+				state++;
+				map.broadcastMessage(MaplePacketCreator.triggerReactor(this, stance));
+				ReactorScriptManager.getInstance().act(c, this);
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
     }
 
     public Rectangle getArea() {

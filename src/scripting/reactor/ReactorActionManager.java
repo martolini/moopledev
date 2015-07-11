@@ -91,11 +91,11 @@ public class ReactorActionManager extends AbstractPlayerInteraction {
                 Item drop;
                 MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
                 if (ii.getInventoryType(d.itemId) != MapleInventoryType.EQUIP) {
-                    drop = new Item(d.itemId, (byte) 0, (short) 1);
+                    drop = new Item(d.itemId, (short) 0, (short) 1);
                 } else {
                     drop = ii.randomizeStats((Equip) ii.getEquipById(d.itemId));
                 }
-                reactor.getMap().spawnItemDrop(reactor, getPlayer(), drop, dropPos, false, true);
+                reactor.getMap().spawnItemDrop(reactor, getPlayer(), drop, dropPos, false, false);
             }
             dropPos.x += 25;
 

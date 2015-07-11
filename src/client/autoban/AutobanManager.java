@@ -8,6 +8,7 @@ package client.autoban;
 import client.MapleCharacter;
 import java.util.HashMap;
 import java.util.Map;
+import tools.FilePrinter;
 
 /**
  *
@@ -30,6 +31,9 @@ public class AutobanManager {
     }
 
     public void addPoint(AutobanFactory fac, String reason) {
+    	if (chr.isGM() || chr.isBanned()){
+    		return;
+    	}
         if (lastTime.containsKey(fac)) {
             if (lastTime.get(fac) < (System.currentTimeMillis() - fac.getExpire())) {
                 points.put(fac, points.get(fac) / 2); //So the points are not completely gone.
@@ -44,9 +48,13 @@ public class AutobanManager {
             points.put(fac, 1);
 
         if (points.get(fac) >= fac.getMaximum()) {
-            chr.autoban("Autobanned for " + fac.name() + " ;" + reason, 1);
-            chr.sendPolice("You have been blocked by #bMooplePolice for the HACK reason#k.");
+        	chr.autoban(reason);
+            //chr.autoban("Autobanned for " + fac.name() + " ;" + reason, 1);
+            //chr.sendPolice("You have been blocked by #bMooplePolice for the HACK reason#k.");
         }
+        
+        // Lets log every single point too.
+        FilePrinter.printError("autobanwarning.txt", MapleCharacter.makeMapleReadable(chr.getName()) + " caused " + fac.name() + " " + reason + "\r\n");
     }
 
     public void addMiss() {
@@ -58,7 +66,8 @@ public class AutobanManager {
             samemisscount++;
         }
         if (samemisscount > 4)
-            chr.autoban("Autobanned for : " + misses + " Miss godmode", 1);
+        	chr.sendPolice("You will be disconnected for miss godmode.");
+            //chr.autoban("Autobanned for : " + misses + " Miss godmode", 1);
         else if (samemisscount > 0)
 
         this.lastmisses = misses;
@@ -68,6 +77,10 @@ public class AutobanManager {
     //Don't use the same type for more than 1 thing
     public void spam(int type) {
         this.spam[type] = System.currentTimeMillis();
+    }
+    
+    public void spam(int type, int timestamp) {
+        this.spam[type] = timestamp;
     }
 
     public long getLastSpam(int type) {
@@ -84,14 +97,16 @@ public class AutobanManager {
      * 3: ItemIdSort<br>
      * 4: SpecialMove<br>
      * 5: UseCatchItem<br>
+	 * 6: Item Drop<br>
+	 * 7: Chat<br>
      *
      * @param type type
      * @return Timestamp checker
      */
-    public void setTimestamp(int type, int time) {
+    public void setTimestamp(int type, int time, int times) {
         if (this.timestamp[type] == time) {  
             this.timestampcounter[type]++;
-            if (this.timestampcounter[type] > 3) {
+            if (this.timestampcounter[type] >= times) {
                 chr.getClient().disconnect(false, false);
                 //System.out.println("Same timestamp for type: " + type + "; Character: " + chr);
             }

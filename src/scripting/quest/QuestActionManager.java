@@ -34,7 +34,7 @@ public class QuestActionManager extends NPCConversationManager {
     private int quest;
 
     public QuestActionManager(MapleClient c, int quest, int npc, boolean start) {
-        super(c, npc);
+        super(c, npc, null);
         this.quest = quest;
         this.start = start;
     }
@@ -62,6 +62,16 @@ public class QuestActionManager extends NPCConversationManager {
 
     public boolean forceCompleteQuest() {
         return forceCompleteQuest(quest);
+    }
+    
+    // For compatability with some older scripts...
+    public void startQuest() {
+        forceStartQuest();
+    }
+    
+    // For compatability with some older scripts...
+    public void completeQuest() {
+        forceCompleteQuest();
     }
 
     public boolean forceCompleteQuest(int id) {

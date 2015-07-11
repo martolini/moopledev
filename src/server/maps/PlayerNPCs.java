@@ -36,7 +36,7 @@ import tools.MaplePacketCreator;
  * @author XoticStory
  */
 public class PlayerNPCs extends AbstractMapleMapObject {
-    private Map<Byte, Integer> equips = new HashMap<Byte, Integer>();
+    private Map<Short, Integer> equips = new HashMap<Short, Integer>();
     private int npcId, face, hair;
     private byte skin;
     private String name = "";
@@ -58,7 +58,7 @@ public class PlayerNPCs extends AbstractMapleMapObject {
             ps.setInt(1, rs.getInt("id"));
             ResultSet rs2 = ps.executeQuery();
             while (rs2.next()) {
-                equips.put(rs2.getByte("equippos"), rs2.getInt("equipid"));
+                equips.put(rs2.getShort("equippos"), rs2.getInt("equipid"));
             }
             rs2.close();
             ps.close();
@@ -66,7 +66,7 @@ public class PlayerNPCs extends AbstractMapleMapObject {
         }
     }
 
-    public Map<Byte, Integer> getEquips() {
+    public Map<Short, Integer> getEquips() {
         return equips;
     }
 

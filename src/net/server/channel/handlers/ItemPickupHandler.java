@@ -21,10 +21,6 @@
  */
 package net.server.channel.handlers;
 
-import client.MapleCharacter;
-import client.MapleClient;
-import client.autoban.AutobanFactory;
-import java.awt.Point;
 import net.AbstractMaplePacketHandler;
 import net.server.world.MaplePartyCharacter;
 import scripting.item.ItemScriptManager;
@@ -35,6 +31,8 @@ import server.maps.MapleMapItem;
 import server.maps.MapleMapObject;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
+import client.MapleCharacter;
+import client.MapleClient;
 
 /**
  *
@@ -46,40 +44,45 @@ public final class ItemPickupHandler extends AbstractMaplePacketHandler {
     public final void handlePacket(final SeekableLittleEndianAccessor slea, final MapleClient c) {
         slea.readInt(); //Timestamp
         slea.readByte();
-        Point cpos = slea.readPos();
+        slea.readPos(); //cpos
         int oid = slea.readInt();
         MapleCharacter chr = c.getPlayer();
         MapleMapObject ob = chr.getMap().getMapObject(oid);
         if (ob == null) {
             return;
         }
-        if (chr.getInventory(MapleItemInformationProvider.getInstance().getInventoryType(ob.getObjectId())).getNextFreeSlot() > -1) {
-            if (chr.getMapId() > 209000000 && chr.getMapId() < 209000016) {//happyville trees
-                MapleMapItem mapitem = (MapleMapItem) ob;
-                if (mapitem.getDropper().getObjectId() == c.getPlayer().getObjectId()) {
-                    if (MapleInventoryManipulator.addFromDrop(c, mapitem.getItem(), false)) {
-                        chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 2, chr.getId()), mapitem.getPosition());
-                        chr.getMap().removeMapObject(ob);
+		
+        if (ob instanceof MapleMapItem) {
+            MapleMapItem mapitem = (MapleMapItem) ob;
+			if(System.currentTimeMillis() - mapitem.getDropTime() < 900) {
+				c.announce(MaplePacketCreator.enableActions());
+                return;
+			} 
+            if (mapitem.getItemId() == 4031865 || mapitem.getItemId() == 4031866 || mapitem.getMeso() > 0 || MapleItemInformationProvider.getInstance().isConsumeOnPickup(mapitem.getItemId()) || MapleInventoryManipulator.checkSpace(c, mapitem.getItemId(), mapitem.getItem().getQuantity(), mapitem.getItem().getOwner())) {
+                if ((chr.getMapId() > 209000000 && chr.getMapId() < 209000016) || (chr.getMapId() >= 990000500 && chr.getMapId() <= 990000502)) {//happyville trees and guild PQ
+                    if (!mapitem.isPlayerDrop() || mapitem.getDropper().getObjectId() == c.getPlayer().getObjectId()) {
+                        if(mapitem.getMeso() > 0) {
+							chr.gainMeso(mapitem.getMeso(), true, true, false);
+							chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 2, chr.getId()), mapitem.getPosition());
+                            chr.getMap().removeMapObject(ob);
+							mapitem.setPickedUp(true);
+						} else if (MapleInventoryManipulator.addFromDrop(c, mapitem.getItem(), false)) {
+                            chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 2, chr.getId()), mapitem.getPosition());
+                            chr.getMap().removeMapObject(ob);
+							mapitem.setPickedUp(true);
+                        } else {
+                            c.announce(MaplePacketCreator.enableActions());
+                            return;
+                        }
                     } else {
-                        c.announce(MaplePacketCreator.enableActions());
+                        c.announce(MaplePacketCreator.getInventoryFull());
+                        c.announce(MaplePacketCreator.getShowInventoryFull());
                         return;
                     }
-                    mapitem.setPickedUp(true);
-                } else {
-                    c.announce(MaplePacketCreator.getInventoryFull());
-                    c.announce(MaplePacketCreator.getShowInventoryFull());
+                    c.announce(MaplePacketCreator.enableActions());
                     return;
                 }
-                c.announce(MaplePacketCreator.enableActions());
-                return;
-            }
-            if (ob == null) {
-                c.announce(MaplePacketCreator.getInventoryFull());
-                c.announce(MaplePacketCreator.getShowInventoryFull());
-                return;
-            }
-            if (ob instanceof MapleMapItem) {
-                MapleMapItem mapitem = (MapleMapItem) ob;
+            
                 synchronized (mapitem) {
                     if (mapitem.getQuest() > 0 && !chr.needQuestItem(mapitem.getQuest(), mapitem.getItemId())) {
                         c.announce(MaplePacketCreator.showItemUnavailable());
@@ -90,12 +93,6 @@ public final class ItemPickupHandler extends AbstractMaplePacketHandler {
                         c.announce(MaplePacketCreator.getInventoryFull());
                         c.announce(MaplePacketCreator.getShowInventoryFull());
                         return;
-                    }
-                    final double Distance = cpos.distanceSq(mapitem.getPosition());
-                    if (Distance > 2500) {
-                        AutobanFactory.SHORT_ITEM_VAC.autoban(chr, cpos.toString() + Distance);
-                    } else if (chr.getPosition().distanceSq(mapitem.getPosition()) > 90000.0) {
-                        AutobanFactory.ITEM_VAC.autoban(chr, cpos.toString() + Distance);
                     }
                     if (mapitem.getMeso() > 0) {
                         if (chr.getParty() != null) {
@@ -136,6 +133,9 @@ public final class ItemPickupHandler extends AbstractMaplePacketHandler {
                                 return;
                             }
                         }
+					} else if(mapitem.getItemId() == 4031865 || mapitem.getItemId() == 4031866) {
+                        // Add NX to account, show effect and make item disapear
+                        chr.getCashShop().gainCash(1, mapitem.getItemId() == 4031865 ? 100 : 250);
                     } else if (useItem(c, mapitem.getItem().getItemId())) {
                         if (mapitem.getItem().getItemId() / 10000 == 238) {
                             chr.getMonsterBook().addCard(c, mapitem.getItem().getItemId());
@@ -143,14 +143,14 @@ public final class ItemPickupHandler extends AbstractMaplePacketHandler {
                     } else if (MapleInventoryManipulator.addFromDrop(c, mapitem.getItem(), true)) {
                     } else if (mapitem.getItem().getItemId() == 4031868) {
                         chr.getMap().broadcastMessage(MaplePacketCreator.updateAriantPQRanking(chr.getName(), chr.getItemQuantity(4031868, false), false));
-                    } else {
+					} else {
                         c.announce(MaplePacketCreator.enableActions());
                         return;
                     }
                     mapitem.setPickedUp(true);
                     chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 2, chr.getId()), mapitem.getPosition());
                     chr.getMap().removeMapObject(ob);
-                }
+				}
             }
         }
         c.announce(MaplePacketCreator.enableActions());

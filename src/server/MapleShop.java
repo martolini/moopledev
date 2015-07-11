@@ -84,9 +84,9 @@ public class MapleShop {
                 System.out.println("Wrong slot number in shop " + id);
                 return;
             }
-        } else 
+        } else {
             return;
-
+        }
         MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         if (item != null && item.getPrice() > 0) {
             if (c.getPlayer().getMeso() >= (long) item.getPrice() * quantity) {
@@ -154,7 +154,10 @@ public class MapleShop {
             quantity = 1;
         }
         MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
-        Item item = c.getPlayer().getInventory(type).getItem((byte) slot);
+        Item item = c.getPlayer().getInventory(type).getItem((short) slot);
+        if (item == null){ //Basic check
+        	return;
+        }
         if (ItemConstants.isRechargable(item.getItemId())) {
             quantity = item.getQuantity();
         }
@@ -169,7 +172,7 @@ public class MapleShop {
             MapleInventoryManipulator.removeFromSlot(c, type, (byte) slot, quantity, false);
             double price;
             if (ItemConstants.isRechargable(item.getItemId())) {
-                price = ii.getWholePrice(item.getItemId()) / (double) ii.getSlotMax(c, item.getItemId());
+            	price = ii.getWholePrice(item.getItemId()) / (double) ii.getSlotMax(c, item.getItemId());
             } else {
                 price = ii.getPrice(item.getItemId());
             }
@@ -181,7 +184,7 @@ public class MapleShop {
         }
     }
 
-    public void recharge(MapleClient c, byte slot) {
+    public void recharge(MapleClient c, short slot) {
         MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         Item item = c.getPlayer().getInventory(MapleInventoryType.USE).getItem(slot);
         if (item == null || !ItemConstants.isRechargable(item.getItemId())) {
@@ -232,7 +235,7 @@ public class MapleShop {
                 ps.close();
                 return null;
             }
-            ps = con.prepareStatement("SELECT * FROM shopitems WHERE shopid = ? ORDER BY position ASC");
+            ps = con.prepareStatement("SELECT * FROM shopitems WHERE shopid = ? ORDER BY position DESC");
             ps.setInt(1, shopId);
             rs = ps.executeQuery();
             List<Integer> recharges = new ArrayList<>(rechargeableItems);

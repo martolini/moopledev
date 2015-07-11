@@ -21,40 +21,65 @@
 */
 package net.server.channel.handlers;
 
-import client.MapleCharacter;
-import client.MapleClient;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import net.AbstractMaplePacketHandler;
 import net.server.world.World;
+import tools.LogHelper;
 import tools.DatabaseConnection;
+import tools.FilePrinter;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
+import client.MapleCharacter;
+import client.MapleClient;
+import client.autoban.AutobanFactory;
 
 /**
  *
  * @author Matze
  */
 public final class WhisperHandler extends AbstractMaplePacketHandler {
+	
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         byte mode = slea.readByte();
         if (mode == 6) { // whisper
             String recipient = slea.readMapleAsciiString();
             String text = slea.readMapleAsciiString();
             MapleCharacter player = c.getChannelServer().getPlayerStorage().getCharacterByName(recipient);
+			if(c.getPlayer().getAutobanManager().getLastSpam(7) + 200 > System.currentTimeMillis()) {
+				return;
+			}
+            if (text.length() > Byte.MAX_VALUE && !player.isGM()) {
+            	AutobanFactory.PACKET_EDIT.alert(c.getPlayer(), c.getPlayer().getName() + " tried to packet edit with whispers.");
+            	FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " tried to send text with length of " + text.length() + "\r\n");
+            	c.disconnect(true, false);
+            	return;
+            }
             if (player != null) {
                 player.getClient().announce(MaplePacketCreator.getWhisper(c.getPlayer().getName(), c.getChannel(), text));
-                c.announce(MaplePacketCreator.getWhisperReply(recipient, (byte) 1));
+                
+                if(player.isHidden() && player.gmLevel() > c.getPlayer().gmLevel()) {
+                    c.announce(MaplePacketCreator.getWhisperReply(recipient, (byte) 0));
+                } else {
+                    c.announce(MaplePacketCreator.getWhisperReply(recipient, (byte) 1));
+                }
             } else {// not found
                 World world = c.getWorldServer();
                     if (world.isConnected(recipient)) {
                         world.whisper(c.getPlayer().getName(), recipient, c.getChannel(), text);
-                        c.announce(MaplePacketCreator.getWhisperReply(recipient, (byte) 1));
+                        
+                        player = world.getPlayerStorage().getCharacterByName(recipient);
+                        if(player.isHidden() && player.gmLevel() > c.getPlayer().gmLevel())
+                            c.announce(MaplePacketCreator.getWhisperReply(recipient, (byte) 0));
+                        else
+                            c.announce(MaplePacketCreator.getWhisperReply(recipient, (byte) 1));
                     } else {
                         c.announce(MaplePacketCreator.getWhisperReply(recipient, (byte) 0));
                     }
             }
+			c.getPlayer().getAutobanManager().spam(7);
         } else if (mode == 5) { // - /find
             String recipient = slea.readMapleAsciiString();
             MapleCharacter victim = c.getChannelServer().getPlayerStorage().getCharacterByName(recipient);

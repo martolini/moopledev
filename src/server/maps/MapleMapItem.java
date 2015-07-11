@@ -34,6 +34,7 @@ public class MapleMapItem extends AbstractMapleMapObject {
     protected int character_ownerid, meso, questid = -1;
     protected byte type;
     protected boolean pickedUp = false, playerDrop;
+	protected long dropTime;
     public ReentrantLock itemLock = new ReentrantLock();
 
     public MapleMapItem(Item item, Point position, MapleMapObject dropper, MapleCharacter owner, byte type, boolean playerDrop) {
@@ -105,6 +106,14 @@ public class MapleMapItem extends AbstractMapleMapObject {
     public void setPickedUp(final boolean pickedUp) {
 	this.pickedUp = pickedUp;
     }
+	
+	public long getDropTime() {
+		return dropTime;
+	}
+	
+	public void setDropTime(long time) {
+		this.dropTime  = time;
+	}
 
     public byte getDropType() {
 	return type;

@@ -50,13 +50,13 @@ public class Equip extends Item {
     private int ringid = -1;
     private boolean wear = false;
 
-    public Equip(int id, byte position) {
+    public Equip(int id, short position) {
         super(id, position, (short) 1);
         this.itemExp = 0;
         this.itemLevel = 1;
     }
 
-    public Equip(int id, byte position, int slots) {
+    public Equip(int id, short position, int slots) {
         super(id, position, (short) 1);
         this.upgradeSlots = (byte) slots;
         this.itemExp = 0;
