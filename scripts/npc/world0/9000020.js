@@ -63,7 +63,7 @@ function action(mode, type, selection) {
 
 function warp(selection){
     if (status == 0)
-        cm.sendSimple("#fUI/UIWindow.img/QuestIcon/3/0#\r\n#L0#Boss Maps#l\r\n#L1#Monster Maps#l\r\n#L2#Town Maps#l");
+        cm.sendSimple("#fUI/UIWindow.img/QuestIcon/3/0#\r\n#L0#Boss000 Maps#l\r\n#L1#Monster Maps#l\r\n#L2#Town Maps#l");
     else if (status == 1) {
         chosenSection = selection;
         var selStr = "Select your destination.#b";
