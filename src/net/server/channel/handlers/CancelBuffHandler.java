@@ -26,7 +26,6 @@ import client.SkillFactory;
 import constants.skills.Bishop;
 import constants.skills.Bowmaster;
 import constants.skills.Corsair;
-import constants.skills.Evan;
 import constants.skills.FPArchMage;
 import constants.skills.ILArchMage;
 import constants.skills.Marksman;
@@ -49,8 +48,6 @@ public final class CancelBuffHandler extends AbstractMaplePacketHandler implemen
             case Marksman.PIERCING_ARROW:
             case Corsair.RAPID_FIRE:
             case WindArcher.HURRICANE:
-            case Evan.FIRE_BREATH:
-            case Evan.ICE_BREATH:
                 c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.skillCancel(c.getPlayer(), sourceid), false);
                 break;
             default:

@@ -21,13 +21,12 @@
  */
 package net.server.handlers.login;
 
+import client.MapleClient;
 import java.util.Calendar;
-
 import net.MaplePacketHandler;
 import server.TimerManager;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
-import client.MapleClient;
 
 public final class LoginPasswordHandler implements MaplePacketHandler {
 
@@ -35,20 +34,17 @@ public final class LoginPasswordHandler implements MaplePacketHandler {
     public boolean validateState(MapleClient c) {
         return !c.isLoggedIn();
     }
-    
 
     @Override
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-    	
+        int loginok;
         String login = slea.readMapleAsciiString();
         String pwd = slea.readMapleAsciiString();
         c.setAccountName(login);
-        
-        int loginok = c.login(login, pwd);
-        
+        loginok = c.login(login, pwd);
+
         if (c.hasBannedIP() || c.hasBannedMac()) {
             c.announce(MaplePacketCreator.getLoginFailed(3));
-            return;
         }
         Calendar tempban = c.getTempBanCalendar();
         if (tempban != null) {
@@ -65,20 +61,16 @@ public final class LoginPasswordHandler implements MaplePacketHandler {
             return;
         }
         if (c.finishLogin() == 0) {
-        	login(c);
+            c.announce(MaplePacketCreator.getAuthSuccess(c));//why the fk did I do c.getAccountName()?
+            final MapleClient client = c;
+            c.setIdleTask(TimerManager.getInstance().schedule(new Runnable() {
+                @Override
+                public void run() {
+                    client.disconnect(false, false);
+                }
+            }, 600000));
         } else {
             c.announce(MaplePacketCreator.getLoginFailed(7));
         }
-    }
-    
-    private static void login(MapleClient c){
-        c.announce(MaplePacketCreator.getAuthSuccess(c));//why the fk did I do c.getAccountName()?
-        final MapleClient client = c;
-        c.setIdleTask(TimerManager.getInstance().schedule(new Runnable() {
-            @Override
-            public void run() {
-                client.disconnect(false, false);
-            }
-        }, 600000));
     }
 }

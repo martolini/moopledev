@@ -22,10 +22,9 @@
 package client.status;
 
 public enum MonsterStatus {
+    NEUTRALISE(0x02),
     WATK(0x1),
     WDEF(0x2),
-    NEUTRALISE(0x2, true),
-    PHANTOM_IMPRINT(0x4, true), // needs testing
     MATK(0x4),
     MDEF(0x8),
     ACC(0x10),
@@ -43,17 +42,12 @@ public enum MonsterStatus {
     DOOM(0x10000),
     SHADOW_WEB(0x20000),
     WEAPON_IMMUNITY(0x40000),
-    MAGIC_IMMUNITY(0x80000),
-    HARD_SKIN(0x200000), // just added
     NINJA_AMBUSH(0x400000),
-    ELEMENTAL_ATTRIBUTE(0x800000), // just added
-    VENOMOUS_WEAPON(0x1000000),
-    BLIND(0x2000000), // just added
-    SEAL_SKILL(0x4000000),
+    MAGIC_IMMUNITY(0x80000),
+    VENOMOUS_WEAPON(0x100000),
     INERTMOB(0x10000000),
-    WEAPON_REFLECT(0x20000000, true),
-    MAGIC_REFLECT(0x40000000, true);
-
+    WEAPON_REFLECT(0x20000000),
+    MAGIC_REFLECT(0x40000000);
     private final int i;
     private final boolean first;
 
@@ -63,12 +57,12 @@ public enum MonsterStatus {
     }
 
     private MonsterStatus(int i, boolean first) {
-		this.i = i;
-		this.first = first;
+	this.i = i;
+	this.first = first;
     }
 
     public boolean isFirst() {
-    	return first;
+	return first;
     }
     
     public int getValue() {

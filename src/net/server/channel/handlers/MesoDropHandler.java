@@ -21,11 +21,12 @@
 */
 package net.server.channel.handlers;
 
+import client.MapleCharacter;
+import client.MapleClient;
+import java.awt.Point;
 import net.AbstractMaplePacketHandler;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
-import client.MapleCharacter;
-import client.MapleClient;
 
 /**
  *
@@ -33,20 +34,16 @@ import client.MapleClient;
  */
 public final class MesoDropHandler extends AbstractMaplePacketHandler {//FIX
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-        MapleCharacter player = c.getPlayer();
-        if (!player.isAlive()) {
+        MapleCharacter chr = c.getPlayer();
+        if (!chr.isAlive()) {
             c.announce(MaplePacketCreator.enableActions());
             return;
         }
-        if (!player.canDropMeso()){
-        	player.announce(MaplePacketCreator.serverNotice(5, "Fast meso drop has been patched, cut that out. ;)"));
-        	return;
-        }
         slea.skip(4);
         int meso = slea.readInt();
-        if (meso <= player.getMeso() && meso > 9 && meso < 50001) {
-        	player.gainMeso(-meso, false, true, false);
-        	player.getMap().spawnMesoDrop(meso, player.getPosition(), player, player, true, (byte) 2);
+        if (meso <= c.getPlayer().getMeso() && meso > 9 && meso < 50001) {
+            c.getPlayer().gainMeso(-meso, false, true, false);
+            c.getPlayer().getMap().spawnMesoDrop(meso, chr.getPosition(), chr, chr, true, (byte) 2);
         }
     }
 }

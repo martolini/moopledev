@@ -52,8 +52,6 @@ public class PortalPlayerInteraction extends AbstractPlayerInteraction {
             rs = ps.executeQuery();
             while (rs.next()) {
                 if (rs.getInt("level") >= 30) {
-                	ps.close();	
-                	rs.close();
                     return true;
                 }
             }

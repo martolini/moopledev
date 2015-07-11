@@ -21,6 +21,11 @@
  */
 package net.server;
 
+import client.MapleCharacter;
+import client.SkillFactory;
+import constants.ServerConstants;
+import gm.GMPacketCreator;
+import gm.server.GMServer;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -36,7 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-
 import net.MapleServerHandler;
 import net.mina.MapleCodecFactory;
 import net.server.channel.Channel;
@@ -44,7 +48,6 @@ import net.server.guild.MapleAlliance;
 import net.server.guild.MapleGuild;
 import net.server.guild.MapleGuildCharacter;
 import net.server.world.World;
-
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.buffer.SimpleBufferAllocator;
 import org.apache.mina.core.filterchain.IoFilter;
@@ -52,17 +55,12 @@ import org.apache.mina.core.service.IoAcceptor;
 import org.apache.mina.core.session.IdleStatus;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
-
 import server.CashShop.CashItemFactory;
 import server.MapleItemInformationProvider;
 import server.TimerManager;
 import tools.DatabaseConnection;
-import tools.FilePrinter;
+import tools.MaplePacketCreator;
 import tools.Pair;
-import client.MapleCharacter;
-import client.SkillFactory;
-import constants.ServerConstants;
-import server.quest.MapleQuest;
 
 public class Server implements Runnable {
 
@@ -76,8 +74,7 @@ public class Server implements Runnable {
     private PlayerBuffStorage buffStorage = new PlayerBuffStorage();
     private Map<Integer, MapleAlliance> alliances = new LinkedHashMap<>();
     private boolean online = false;
-    public static long uptime = System.currentTimeMillis();
-    
+
     public static Server getInstance() {
         if (instance == null) {
             instance = new Server();
@@ -117,6 +114,7 @@ public class Server implements Runnable {
                 channelz.add(ch);
             }
         }
+
         return channelz;
     }
 
@@ -128,18 +126,16 @@ public class Server implements Runnable {
     public void run() {
         Properties p = new Properties();
         try {
-            p.load(new FileInputStream("world.ini"));
+            p.load(new FileInputStream("moople.ini"));
         } catch (Exception e) {
             System.out.println("Please start create_server.bat");
             System.exit(0);
         }
 
-        System.out.println("MapleSolaxia v" + ServerConstants.VERSION + " starting up.\r\n");
+        System.out.println("MoopleDEV v" + ServerConstants.VERSION + " starting up.\r\n");
 
 
-        if(ServerConstants.SHUTDOWNHOOK)
         Runtime.getRuntime().addShutdownHook(new Thread(shutdown(false)));
-        
         DatabaseConnection.getConnection();
         Connection c = DatabaseConnection.getConnection();
         try {
@@ -159,32 +155,29 @@ public class Server implements Runnable {
         tMan.start();
         tMan.register(tMan.purge(), 300000);//Purging ftw...
         tMan.register(new RankingWorker(), ServerConstants.RANKING_INTERVAL);
-        
+
         long timeToTake = System.currentTimeMillis();
+        System.out.println("Loading Skills");
         SkillFactory.loadAllSkills();
         System.out.println("Skills loaded in " + ((System.currentTimeMillis() - timeToTake) / 1000.0) + " seconds");
 
         timeToTake = System.currentTimeMillis();
+        System.out.println("Loading Items");
         MapleItemInformationProvider.getInstance().getAllItems();
 
         CashItemFactory.getSpecialCashItems();
-        System.out.println("Items loaded in " + ((System.currentTimeMillis() - timeToTake) / 1000.0) + " seconds\r\n");
-        
-		timeToTake = System.currentTimeMillis();
-		MapleQuest.loadAllQuest();
-		System.out.println("Quest loaded in " + ((System.currentTimeMillis() - timeToTake) / 1000.0) + " seconds\r\n");
-		
-		
+        System.out.println("Items loaded in " + ((System.currentTimeMillis() - timeToTake) / 1000.0) + " seconds");
         try {
             for (int i = 0; i < Integer.parseInt(p.getProperty("worlds")); i++) {
                 System.out.println("Starting world " + i);
                 World world = new World(i,
                         Integer.parseInt(p.getProperty("flag" + i)),
                         p.getProperty("eventmessage" + i),
-                        ServerConstants.EXP_RATE,
-                        ServerConstants.DROP_RATE,
-                        ServerConstants.MESO_RATE,
-                        ServerConstants.BOSS_DROP_RATE);
+                        Integer.parseInt(p.getProperty("exprate" + i)),
+                        Integer.parseInt(p.getProperty("droprate" + i)),
+                        Integer.parseInt(p.getProperty("mesorate" + i)),
+                        Integer.parseInt(p.getProperty("bossdroprate" + i)),
+                        Integer.parseInt(p.getProperty("exprate" + i)) / 2);//ohlol
 
                 worldRecommendedList.add(new Pair<>(i, p.getProperty("whyamirecommended" + i)));
                 worlds.add(world);
@@ -213,17 +206,16 @@ public class Server implements Runnable {
         
         System.out.println("Listening on port 8484\r\n\r\n");
 
-        System.out.println("Solaxia is now online.");
+        if (Boolean.parseBoolean(p.getProperty("gmserver"))) {
+            GMServer.startGMServer();
+        }
+        System.out.println("Server is now online.");
         online = true;
     }
 
     public void shutdown() {
-    	try {
-	        TimerManager.getInstance().stop();
-	        acceptor.unbind();
-    	} catch (NullPointerException e) {
-    		FilePrinter.printError(FilePrinter.EXCEPTION_CAUGHT, e);
-    	}
+        TimerManager.getInstance().stop();
+        acceptor.unbind();
         System.out.println("Server offline.");
         System.exit(0);// BOEIEND :D
     }
@@ -344,17 +336,17 @@ public class Server implements Runnable {
         return MapleGuild.createGuild(leaderId, name);
     }
 
-    public MapleGuild getGuild(int id, int world, MapleGuildCharacter mgc) {
+    public MapleGuild getGuild(int id, MapleGuildCharacter mgc) {
         synchronized (guilds) {
             if (guilds.get(id) != null) {
                 return guilds.get(id);
             }
-            MapleGuild g = new MapleGuild(id, world);
-            if (g.getId() == -1) {
+            if (mgc == null) {
                 return null;
             }
-            if (mgc != null) {
-                g.setOnline(mgc.getId(), true, mgc.getChannel());
+            MapleGuild g = new MapleGuild(mgc);
+            if (g.getId() == -1) {
+                return null;
             }
             guilds.put(id, g);
             return g;
@@ -367,10 +359,11 @@ public class Server implements Runnable {
         }
         //for (List<Channel> world : worlds.values()) {
         //reloadGuildCharacters();
+
     }
 
     public void setGuildMemberOnline(MapleGuildCharacter mgc, boolean bOnline, int channel) {
-        MapleGuild g = getGuild(mgc.getGuildId(), mgc.getWorld(), mgc);
+        MapleGuild g = getGuild(mgc.getGuildId(), mgc);
         g.setOnline(mgc.getId(), bOnline, channel);
     }
 
@@ -469,17 +462,6 @@ public class Server implements Runnable {
             g.gainGP(amount);
         }
     }
-	
-	public void guildMessage(int gid, byte[] packet) {
-		guildMessage(gid, packet, -1);
-	}
-	
-	public void guildMessage(int gid, byte[] packet, int exception) {
-		MapleGuild g = guilds.get(gid);
-		if(g != null) {
-			g.broadcast(packet, exception);
-		}
-	}
 
     public PlayerBuffStorage getPlayerBuffStorage() {
         return buffStorage;
@@ -505,35 +487,23 @@ public class Server implements Runnable {
         worlda.reloadGuildSummary();
     }
 
-    public void broadcastMessage(final byte[] packet) {
-        for (Channel ch : getChannelsFromWorld(0)) {
+    public void broadcastMessage(int world, final byte[] packet) {
+        for (Channel ch : getChannelsFromWorld(world)) {
             ch.broadcastPacket(packet);
         }
     }
 
-    public void broadcastGMMessage(final byte[] packet) {
-        for (Channel ch : getChannelsFromWorld(0)) {
-            ch.broadcastGMPacket(packet);
-        }
-    }
-    
-    public boolean isGmOnline() {
-        for (Channel ch : getChannelsFromWorld(0)) {
-        	for (MapleCharacter player : ch.getPlayerStorage().getAllCharacters()) {
-        		if (player.isGM()){
-        			return true;
-        		}
-        	}
-        }
-        return false;
-    }
-    
     public World getWorld(int id) {
         return worlds.get(id);
     }
 
     public List<World> getWorlds() {
         return worlds;
+    }
+
+    public void gmChat(String message, String exclude) {
+        GMServer.broadcastInGame(MaplePacketCreator.serverNotice(6, message));
+        GMServer.broadcastOutGame(GMPacketCreator.chat(message), exclude);
     }
 
     public final Runnable shutdown(final boolean restart) {//only once :D
@@ -545,7 +515,7 @@ public class Server implements Runnable {
                 for (World w : getWorlds()) {
                     w.shutdown();
                 }
-                /*for (World w : getWorlds()) {
+                for (World w : getWorlds()) {
                     while (w.getPlayerStorage().getAllCharacters().size() > 0) {
                         try {
                             Thread.sleep(1000);
@@ -562,7 +532,7 @@ public class Server implements Runnable {
                             System.err.println("FUCK MY LIFE");
                         }
                     }
-                }*/
+                }
 
                 TimerManager.getInstance().purge();
                 TimerManager.getInstance().stop();
@@ -584,15 +554,21 @@ public class Server implements Runnable {
                 worldRecommendedList = null;
 
                 System.out.println("Worlds + Channels are offline.");
-                acceptor.unbind();
-                acceptor = null;
+                try {
+                    acceptor.unbind();
+                    acceptor = null;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 if (!restart) {
-                    System.exit(0);
+                    System.gc();
+                    System.out.println("Exiting!");
                 } else {
                     System.out.println("\r\nRestarting the server....\r\n");
                     try {
                         instance.finalize();//FUU I CAN AND IT'S FREE
                     } catch (Throwable ex) {
+                        ex.printStackTrace();
                     }
                     instance = null;
                     System.gc();

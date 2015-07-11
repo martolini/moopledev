@@ -27,7 +27,6 @@ import client.BuddyList.BuddyOperation;
 import client.BuddylistEntry;
 import client.MapleCharacter;
 import client.MapleFamily;
-
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -36,7 +35,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import net.server.PlayerStorage;
 import net.server.Server;
 import net.server.channel.Channel;
@@ -44,7 +42,6 @@ import net.server.channel.CharacterIdChannelPair;
 import net.server.guild.MapleGuild;
 import net.server.guild.MapleGuildCharacter;
 import net.server.guild.MapleGuildSummary;
-import tools.LogHelper;
 import tools.DatabaseConnection;
 import tools.MaplePacketCreator;
 
@@ -54,7 +51,7 @@ import tools.MaplePacketCreator;
  */
 public class World {
 
-    private int id, flag, exprate, droprate, mesorate, bossdroprate;
+    private int id, flag, exprate, droprate, mesorate, bossdroprate, questexprate;
     private String eventmsg;
     private List<Channel> channels = new ArrayList<>();
     private Map<Integer, MapleParty> parties = new HashMap<>();
@@ -65,7 +62,7 @@ public class World {
     private Map<Integer, MapleGuildSummary> gsStore = new HashMap<>();
     private PlayerStorage players = new PlayerStorage();
 
-    public World(int world, int flag, String eventmsg, int exprate, int droprate, int mesorate, int bossdroprate) {
+    public World(int world, int flag, String eventmsg, int exprate, int droprate, int mesorate, int bossdroprate, int questexprate) {
         this.id = world;
         this.flag = flag;
         this.eventmsg = eventmsg;
@@ -73,6 +70,7 @@ public class World {
         this.droprate = droprate;
         this.mesorate = mesorate;
         this.bossdroprate = bossdroprate;
+        this.questexprate = questexprate;
         runningPartyId.set(1);
         runningMessengerId.set(1);
     }
@@ -104,17 +102,13 @@ public class World {
     public String getEventMessage() {
         return eventmsg;
     }
-    
+
     public int getExpRate() {
         return exprate;
     }
 
     public void setExpRate(int exp) {
-    	//System.out.println("Setting server EXP Rate to " + exp + "x.");
         this.exprate = exp;
-		for(MapleCharacter chr : getPlayerStorage().getAllCharacters()) {
-			chr.setRates();
-		}
     }
 
     public int getDropRate() {
@@ -135,6 +129,14 @@ public class World {
 
     public int getBossDropRate() {
         return bossdroprate;
+    }
+
+    public int getQuestExpRate() {
+        return questexprate;
+    }
+
+    public void setQuestExpRate(int questexp) {
+        this.questexprate = questexp;
     }
 
     public PlayerStorage getPlayerStorage() {
@@ -170,18 +172,18 @@ public class World {
     public MapleGuild getGuild(MapleGuildCharacter mgc) {
         int gid = mgc.getGuildId();
         MapleGuild g;
-        g = Server.getInstance().getGuild(gid, mgc.getWorld(), mgc);
+        g = Server.getInstance().getGuild(gid, mgc);
         if (gsStore.get(gid) == null) {
             gsStore.put(gid, new MapleGuildSummary(g));
         }
         return g;
     }
 
-    public MapleGuildSummary getGuildSummary(int gid, int wid) {
+    public MapleGuildSummary getGuildSummary(int gid) {
         if (gsStore.containsKey(gid)) {
             return gsStore.get(gid);
         } else {
-            MapleGuild g = Server.getInstance().getGuild(gid, wid, null);
+            MapleGuild g = Server.getInstance().getGuild(gid, null);
             if (g != null) {
                 gsStore.put(gid, new MapleGuildSummary(g));
             }
@@ -197,7 +199,7 @@ public class World {
         MapleGuild g;
         Server server = Server.getInstance();
         for (int i : gsStore.keySet()) {
-            g = server.getGuild(i, getId(), null);
+            g = server.getGuild(i, null);
             if (g != null) {
                 gsStore.put(i, new MapleGuildSummary(g));
             } else {
@@ -304,8 +306,6 @@ public class World {
                     chr.setParty(null);
                     chr.setMPC(null);
                 }
-		default:
-			break;
         }
     }
 
@@ -418,19 +418,21 @@ public class World {
     }
 
     public void addMessengerPlayer(MapleMessenger messenger, String namefrom, int fromchannel, int position) {
-    	for (MapleMessengerCharacter messengerchar : messenger.getMembers()) {
-    		MapleCharacter chr = getPlayerStorage().getCharacterByName(messengerchar.getName());
-    		if(chr == null){
-    			continue;
-    		}
-    		if (!messengerchar.getName().equals(namefrom)) {
-    			MapleCharacter from = getChannel(fromchannel).getPlayerStorage().getCharacterByName(namefrom);
-    			chr.getClient().announce(MaplePacketCreator.addMessengerPlayer(namefrom, from, position, (byte) (fromchannel - 1)));
-    			from.getClient().announce(MaplePacketCreator.addMessengerPlayer(chr.getName(), chr, messengerchar.getPosition(), (byte) (messengerchar.getChannel() - 1)));           
-    		} else {
-    			chr.getClient().announce(MaplePacketCreator.joinMessenger(messengerchar.getPosition()));
-    		}
-    	}
+        for (MapleMessengerCharacter messengerchar : messenger.getMembers()) {
+            if (!(messengerchar.getName().equals(namefrom))) {
+                MapleCharacter chr = getPlayerStorage().getCharacterByName(messengerchar.getName());
+                if (chr != null) {
+                    MapleCharacter from = getChannel(fromchannel).getPlayerStorage().getCharacterByName(namefrom);
+                    chr.getClient().announce(MaplePacketCreator.addMessengerPlayer(namefrom, from, position, (byte) (fromchannel - 1)));
+                    from.getClient().announce(MaplePacketCreator.addMessengerPlayer(chr.getName(), chr, messengerchar.getPosition(), (byte) (messengerchar.getChannel() - 1)));
+                }
+            } else if ((messengerchar.getName().equals(namefrom))) {
+                MapleCharacter chr = getPlayerStorage().getCharacterByName(messengerchar.getName());
+                if (chr != null) {
+                    chr.getClient().announce(MaplePacketCreator.joinMessenger(messengerchar.getPosition()));
+                }
+            }
+        }
     }
 
     public void removeMessengerPlayer(MapleMessenger messenger, int position) {
@@ -443,22 +445,12 @@ public class World {
     }
 
     public void messengerChat(MapleMessenger messenger, String chattext, String namefrom) {
-    	String from = "";
-    	String to1 = "";
-    	String to2 = "";
         for (MapleMessengerCharacter messengerchar : messenger.getMembers()) {
             if (!(messengerchar.getName().equals(namefrom))) {
                 MapleCharacter chr = getPlayerStorage().getCharacterByName(messengerchar.getName());
                 if (chr != null) {
                     chr.getClient().announce(MaplePacketCreator.messengerChat(chattext));
-                    if (to1.equals("")){
-                    	to1 = messengerchar.getName();
-                    } else if (to2.equals("")){
-                    	to2 = messengerchar.getName();
-                    } 
                 }
-            } else {
-            	from = messengerchar.getName();
             }
         }
     }
@@ -495,7 +487,7 @@ public class World {
         if (messenger == null) {
             throw new IllegalArgumentException("No messenger with the specified messengerid exists");
         }
-        messenger.addMember(target, target.getPosition());
+        messenger.silentRemoveMember(target);
     }
 
     public void joinMessenger(int messengerid, MapleMessengerCharacter target, String from, int fromchannel) {
@@ -503,7 +495,7 @@ public class World {
         if (messenger == null) {
             throw new IllegalArgumentException("No messenger with the specified messengerid exists");
         }
-        messenger.addMember(target, target.getPosition());
+        messenger.addMember(target);
         addMessengerPlayer(messenger, from, fromchannel, target.getPosition());
     }
 
@@ -512,7 +504,7 @@ public class World {
         if (messenger == null) {
             throw new IllegalArgumentException("No messenger with the specified messengerid exists");
         }
-        messenger.addMember(target, position);
+        messenger.silentAddMember(target, position);
     }
 
     public MapleMessenger createMessenger(MapleMessengerCharacter chrfor) {

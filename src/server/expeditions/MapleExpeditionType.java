@@ -1,75 +1,49 @@
 /*
-	This file is part of the OdinMS Maple Story Server
-    Copyright (C) 2008 Patrick Huy <patrick.huy@frz.cc>
-		       Matthias Butz <matze@odinms.de>
-		       Jan Christian Meyer <vimes@odinms.de>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Affero General Public License as
-    published by the Free Software Foundation version 3 as published by
-    the Free Software Foundation. You may not use, modify or distribute
-    this program under any other version of the GNU Affero General Public
-    License.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Affero General Public License for more details.
-
-    You should have received a copy of the GNU Affero General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package server.expeditions;
 
 /**
-*
-* @author SharpAceX(Alan)
-*/
-
+ *
+ * @author kevintjuh93
+ */
 public enum MapleExpeditionType {
+    UNDEFINED(-1),
+    BALROG_EASY(0),
+    BALROG_NORMAL(1),
+    ZAKUM(2),
+    HORNTAIL(3),
+    CHAOS_ZAKUM(4),
+    CHAOS_HORNTAIL(5),
+    PINKBEAN(6);
+    final int exped;
+    final int limit;
 
-    BALROG_EASY(3, 30, 50, 255, 5),
-    BALROG_NORMAL(6, 30, 50, 255, 5),
-    SCARGA(3, 6, 100, 255, 5),
-    ZAKUM(6, 30, 50, 255, 5),
-    HORNTAIL(6, 30, 80, 255,5),
-    CHAOS_ZAKUM(6, 30, 120, 255, 5),
-    CHAOS_HORNTAIL(6, 30, 120, 255, 5),
-    PINKBEAN(6, 30, 120, 255, 5),
-    CWKPQ(6, 30, 100, 255, 5);
-    
-    private int minSize;
-    private int maxSize;
-    private int minLevel;
-    private int maxLevel;
-    private int registrationTime;
-        
-    private MapleExpeditionType(int minSize, int maxSize, int minLevel, int maxLevel, int minutes) {
-        this.minSize = minSize;
-        this.maxSize = maxSize;
-        this.minLevel = minLevel;
-        this.maxLevel = maxLevel;
-        this.registrationTime = minutes;
+    private MapleExpeditionType(int id) {
+        exped = id;
+        limit = 30;
     }
 
-    public int getMinSize() {
-    	return minSize;
+    private MapleExpeditionType(int id, int l) {
+        exped = id;
+        limit = l;
     }
-    
-    public int getMaxSize() {
-        return maxSize;
+
+    public int getId() {
+        return exped;
     }
-    
-    public int getMinLevel() {
-    	return minLevel;
+
+    public int getLimit() {
+        return limit;
     }
-    
-    public int getMaxLevel() {
-    	return maxLevel;
-    }
-    
-    public int getRegistrationTime(){
-    	return registrationTime;
+
+    public static MapleExpeditionType getExpeditionById(int id) {
+        for (MapleExpeditionType l : MapleExpeditionType.values()) {
+            if (l.getId() == id) {
+                return l;
+            }
+        }
+        return MapleExpeditionType.UNDEFINED;
     }
 }

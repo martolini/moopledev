@@ -183,17 +183,6 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
             if (chr.getInventory(MapleItemInformationProvider.getInstance().getInventoryType(item.getItemId())).addItem(item) != -1) {
                 cs.removeFromInventory(item);
                 c.announce(MaplePacketCreator.takeFromCashInventory(item));
-				if(item instanceof Equip) {
-					Equip equip = (Equip) item;
- 					if(equip.getRingId() >= 0) {
-						MapleRing ring = MapleRing.loadFromDb(equip.getRingId());
-						if (ring.getItemId() > 1112012) {
-                            chr.addFriendshipRing(ring);
-                        } else {
-                            chr.addCrushRing(ring);
-                        }
-					}
-				}
             }
         } else if (action == 0x0E) { // Put into Cash Inventory
             int cashId = slea.readInt();
@@ -207,8 +196,7 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
             mi.removeSlot(item.getPosition());
             c.announce(MaplePacketCreator.putIntoCashInventory(item, c.getAccID()));
         } else if (action == 0x1D) { //crush ring (action 28)
-			slea.readInt();//Birthday
-           // if (checkBirthday(c, birthday)) { //We're using a default birthday, so why restrict rings to only people who know of it? 
+            if (checkBirthday(c, slea.readInt())) {
                 int toCharge = slea.readInt();
                 int SN = slea.readInt();
                 String recipient = slea.readMapleAsciiString();
@@ -218,32 +206,27 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
                 if (partner == null) {
                     chr.getClient().announce(MaplePacketCreator.serverNotice(1, "The partner you specified cannot be found.\r\nPlease make sure your partner is online and in the same channel."));
                 } else {
-                	
-                  /*  if (partner.getGender() == chr.getGender()) {
+                    if (partner.getGender() == chr.getGender()) {
                         chr.dropMessage("You and your partner are the same gender, please buy a friendship ring.");
                         return;
-                    }*/ //Gotta let them faggots marry too, hence why this is commented out <3 
-                	
-                    if(ring.toItem() instanceof Equip) {
-                        Equip item = (Equip) ring.toItem();
-                        int ringid = MapleRing.createRing(ring.getItemId(), chr, partner);
-                        item.setRingId(ringid);
-                        cs.addToInventory(item);
-                        c.announce(MaplePacketCreator.showBoughtCashItem(item, c.getAccID()));
-                        cs.gift(partner.getId(), chr.getName(), text, item.getSN(), (ringid + 1));
-                        cs.gainCash(toCharge, -ring.getPrice());
-                        chr.addCrushRing(MapleRing.loadFromDb(ringid));
-                        try {
-                            chr.sendNote(partner.getName(), text, (byte) 1);
-                        } catch (SQLException ex) {
-                        }
-                        partner.showNote();
-                    }   
+                    }
+                    Equip item = (Equip) ring.toItem();
+                    int ringid = MapleRing.createRing(ring.getItemId(), chr, partner);
+                    item.setRingId(ringid);
+                    cs.addToInventory(item);
+                    c.announce(MaplePacketCreator.showBoughtCashItem(item, c.getAccID()));
+                    cs.gift(partner.getId(), chr.getName(), text, item.getSN(), (ringid + 1));
+                    cs.gainCash(toCharge, -ring.getPrice());
+                    chr.addCrushRing(MapleRing.loadFromDb(ringid));
+                    try {
+                        chr.sendNote(partner.getName(), text, (byte) 1);
+                    } catch (SQLException ex) {
+                    }
+                    partner.showNote();
                 }
-           /* } else {
+            } else {
                 chr.dropMessage("The birthday you entered was incorrect.");
-            }*/
-                
+            }
             c.announce(MaplePacketCreator.showCash(c.getPlayer()));
         } else if (action == 0x20) { // everything is 1 meso...
             int itemId = CashItemFactory.getItem(slea.readInt()).getItemId();
@@ -256,8 +239,7 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
             }
             c.announce(MaplePacketCreator.showCash(c.getPlayer()));
         } else if (action == 0x23) { //Friendship :3
-			slea.readInt(); //Birthday
-          // if (checkBirthday(c, birthday)) {
+            if (checkBirthday(c, slea.readInt())) {
                 int payment = slea.readByte();
                 slea.skip(3); //0s
                 int snID = slea.readInt();
@@ -270,27 +252,23 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
                 if (partner == null) {
                     chr.dropMessage("The partner you specified cannot be found.\r\nPlease make sure your partner is online and in the same channel.");
                 } else {
-                    // Need to check to make sure its actually an equip and the right SN...
-                    if(ring.toItem() instanceof Equip) {
-                        Equip item = (Equip) ring.toItem();
-                        int ringid = MapleRing.createRing(ring.getItemId(), chr, partner);
-                        item.setRingId(ringid);
-                        cs.addToInventory(item);
-                        c.announce(MaplePacketCreator.showBoughtCashItem(item, c.getAccID()));
-                        cs.gift(partner.getId(), chr.getName(), text, item.getSN(), (ringid + 1));
-                        cs.gainCash(payment, -ring.getPrice());
-                        chr.addFriendshipRing(MapleRing.loadFromDb(ringid));
-                        try {
-                            chr.sendNote(partner.getName(), text, (byte) 1);
-                        } catch (SQLException ex) {
-                        }
-                        partner.showNote();
+                    Equip item = (Equip) ring.toItem();
+                    int ringid = MapleRing.createRing(ring.getItemId(), chr, partner);
+                    item.setRingId(ringid);
+                    cs.addToInventory(item);
+                    c.announce(MaplePacketCreator.showBoughtCashItem(item, c.getAccID()));
+                    cs.gift(partner.getId(), chr.getName(), text, item.getSN(), (ringid + 1));
+                    cs.gainCash(payment, -ring.getPrice());
+                    chr.addFriendshipRing(MapleRing.loadFromDb(ringid));
+                    try {
+                        chr.sendNote(partner.getName(), text, (byte) 1);
+                    } catch (SQLException ex) {
                     }
+                    partner.showNote();
                 }
-           /* } else {
+            } else {
                 chr.dropMessage("The birthday you entered was incorrect.");
-            } */
-                
+            }
             c.announce(MaplePacketCreator.showCash(c.getPlayer()));
         } else {
             System.out.println(slea);
@@ -308,40 +286,6 @@ public final class CashOperationHandler extends AbstractMaplePacketHandler {
     }
 
     public static boolean canBuy(CashItem item, int cash) {
-        return item != null && item.isOnSale() && item.getPrice() <= cash && !blocked(item.getItemId());
-    }
-
-    public static boolean blocked(int id){
-    	switch(id){ //All 2x exp cards
-    	case 5211000:
-    	case 5211004:
-    	case 5211005:
-    	case 5211006:
-    	case 5211007:
-    	case 5211008:
-    	case 5211009:
-    	case 5211010:
-    	case 5211011:
-    	case 5211012:
-    	case 5211013:
-    	case 5211014:
-    	case 5211015:
-    	case 5211016:
-    	case 5211017:
-    	case 5211018:
-    	case 5211037:
-    	case 5211038:
-    	case 5211039:
-    	case 5211040:
-    	case 5211041:
-    	case 5211042:
-    	case 5211043:
-    	case 5211044:
-    	case 5211045:
-    	case 5211049:
-    		return true;
-    	default:
-    		return false;
-    	}
+        return item != null && item.isOnSale() && item.getPrice() <= cash;
     }
 }

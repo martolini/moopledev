@@ -27,7 +27,6 @@ import net.AbstractMaplePacketHandler;
 import scripting.item.ItemScriptManager;
 import server.MapleItemInformationProvider;
 import server.MapleItemInformationProvider.scriptedItem;
-import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 /**
@@ -39,7 +38,7 @@ public final class ScriptedItemHandler extends AbstractMaplePacketHandler {
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         MapleItemInformationProvider ii = MapleItemInformationProvider.getInstance();
         slea.readInt(); // trash stamp (thx rmzero)
-        short itemSlot = slea.readShort(); // item sl0t (thx rmzero)
+        byte itemSlot = (byte) slea.readShort(); // item sl0t (thx rmzero)
         int itemId = slea.readInt(); // itemId
         scriptedItem info = ii.getScriptedItemInfo(itemId);
         if (info == null) return;
@@ -49,7 +48,6 @@ public final class ScriptedItemHandler extends AbstractMaplePacketHandler {
             return;
         }
         ism.getItemScript(c, info.getScript());
-        c.announce(MaplePacketCreator.enableActions());
         //NPCScriptManager.getInstance().start(c, info.getNpc(), null, null);        
     }
 }

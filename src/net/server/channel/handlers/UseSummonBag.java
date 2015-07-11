@@ -46,7 +46,7 @@ public final class UseSummonBag extends AbstractMaplePacketHandler {
             return;
         }
         slea.readInt();
-        short slot = slea.readShort();
+        byte slot = (byte) slea.readShort();
         int itemId = slea.readInt();
         Item toUse = c.getPlayer().getInventory(MapleInventoryType.USE).getItem(slot);
         if (toUse != null && toUse.getQuantity() > 0 && toUse.getItemId() == itemId) {

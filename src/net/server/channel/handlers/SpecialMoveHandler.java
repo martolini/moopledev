@@ -21,45 +21,39 @@
 */
 package net.server.channel.handlers;
 
-import java.awt.Point;
-import java.util.concurrent.ScheduledFuture;
-
-import net.AbstractMaplePacketHandler;
-import server.MapleStatEffect;
-import server.TimerManager;
-import server.life.MapleMonster;
-import tools.FilePrinter;
-import tools.MaplePacketCreator;
-import tools.data.input.SeekableLittleEndianAccessor;
 import client.MapleCharacter;
 import client.MapleCharacter.CancelCooldownAction;
-import client.autoban.AutobanFactory;
 import client.MapleClient;
 import client.MapleStat;
 import client.Skill;
 import client.SkillFactory;
-import constants.GameConstants;
 import constants.skills.Brawler;
+import constants.skills.Buccaneer;
 import constants.skills.Corsair;
 import constants.skills.DarkKnight;
 import constants.skills.Hero;
 import constants.skills.Paladin;
 import constants.skills.Priest;
-
+import java.awt.Point;
+import java.util.concurrent.ScheduledFuture;
+import net.AbstractMaplePacketHandler;
+import net.server.channel.Channel;
+import net.server.world.MapleParty;
+import net.server.world.MaplePartyCharacter;
+import net.server.Server;
+import server.MapleStatEffect;
+import server.TimerManager;
+import server.life.MapleMonster;
+import tools.MaplePacketCreator;
+import tools.data.input.SeekableLittleEndianAccessor;
 
 public final class SpecialMoveHandler extends AbstractMaplePacketHandler {
     
     @Override
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
-    	MapleCharacter chr = c.getPlayer();
-        chr.getAutobanManager().setTimestamp(4, slea.readInt(), 3);
+        MapleCharacter chr = c.getPlayer();
+        chr.getAutobanManager().setTimestamp(4, slea.readInt());
         int skillid = slea.readInt();
-        if ((!GameConstants.isPQSkillMap(c.getPlayer().getMapId()) && GameConstants.isPqSkill(skillid)) || (!c.getPlayer().isGM() && GameConstants.isGMSkills(skillid)) || (!GameConstants.isInJobTree(skillid, c.getPlayer().getJob().getId()) && !c.getPlayer().isGM())) {
-        	AutobanFactory.PACKET_EDIT.alert(c.getPlayer(), c.getPlayer().getName() + " tried to packet edit skills.");
-        	FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " tried to use skill " + skillid + " without it being in their job.\r\n");
-    		c.disconnect(true, false);
-            return;
-        }
         Point pos = null;
         int __skillLevel = slea.readByte();
         Skill skill = SkillFactory.getSkill(skillid);
@@ -91,15 +85,25 @@ public final class SpecialMoveHandler extends AbstractMaplePacketHandler {
                 chr.getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.showMagnet(mobId, success), false);
                 MapleMonster monster = chr.getMap().getMonsterByOid(mobId);
                 if (monster != null) {
-                	if (!monster.isBoss()) {
-                		monster.switchController(c.getPlayer(), monster.isControllerHasAggro());
-                	}
+                    monster.switchController(c.getPlayer(), monster.isControllerHasAggro());
                 }
             }
             byte direction = slea.readByte();
             chr.getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.showBuffeffect(chr.getId(), skillid, chr.getSkillLevel(skillid), direction), false);
             c.announce(MaplePacketCreator.enableActions());
             return;
+        } else if (skillid == Buccaneer.TIME_LEAP) { // Timeleap
+            MapleParty p = chr.getParty();
+            if (p != null) {
+                for (MaplePartyCharacter mpc : p.getMembers()) {
+                    for (Channel cserv : Server.getInstance().getChannelsFromWorld(c.getWorld())) {
+                        if (cserv.getPlayerStorage().getCharacterById(mpc.getId()) != null) {
+                            cserv.getPlayerStorage().getCharacterById(mpc.getId()).removeAllCooldownsExcept(5121010);
+                        }
+                    }
+                }
+            }
+            chr.removeAllCooldownsExcept(Buccaneer.TIME_LEAP);
         } else if (skillid == Brawler.MP_RECOVERY) {// MP Recovery
             Skill s = SkillFactory.getSkill(skillid);
             MapleStatEffect ef = s.getEffect(chr.getSkillLevel(s));
@@ -112,13 +116,8 @@ public final class SpecialMoveHandler extends AbstractMaplePacketHandler {
         } else if (skillid % 10000000 == 1004) {
             slea.readShort();
         }
-        
         if (slea.available() == 5) {
             pos = new Point(slea.readShort(), slea.readShort());
-        }
-        if (skill.getId() == Priest.MYSTIC_DOOR && !chr.isGM()) {
-        	c.announce(MaplePacketCreator.enableActions());
-        	return;
         }
         if (chr.isAlive()) {
             if (skill.getId() != Priest.MYSTIC_DOOR || chr.canDoor()) {

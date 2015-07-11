@@ -23,7 +23,6 @@ package net.server.guild;
 
 import client.MapleCharacter;
 import client.MapleClient;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,10 +33,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import net.server.Server;
 import net.server.channel.Channel;
-import tools.LogHelper;
 import tools.DatabaseConnection;
 import tools.MaplePacketCreator;
 
@@ -57,9 +54,9 @@ public class MapleGuild {
     private boolean bDirty = true;
 
 
-	
-    public MapleGuild(int guildid, int world) {
-        this.world = world;
+    public MapleGuild(MapleGuildCharacter initiator) {
+        int guildid = initiator.getGuildId();
+        world = initiator.getWorld();
         members = new ArrayList<>();
         Connection con = DatabaseConnection.getConnection();
         try {
@@ -99,7 +96,7 @@ public class MapleGuild {
             do {
                 members.add(new MapleGuildCharacter(rs.getInt("id"), rs.getInt("level"), rs.getString("name"), (byte) -1, world, rs.getInt("job"), rs.getInt("guildrank"), guildid, false, rs.getInt("allianceRank")));
             } while (rs.next());
-            
+            setOnline(initiator.getId(), true, initiator.getChannel());
             ps.close();
             rs.close();
         } catch (SQLException se) {
@@ -301,8 +298,8 @@ public class MapleGuild {
         bDirty = true;
     }
 
-    public void guildChat(String name, int cid, String message) {
-    	this.broadcast(MaplePacketCreator.multiChat(name, message, 2), cid);
+    public void guildChat(String name, int cid, String msg) {
+        this.broadcast(MaplePacketCreator.multiChat(name, msg, 2), cid);
     }
 
     public String getRankTitle(int rank) {
@@ -501,13 +498,6 @@ public class MapleGuild {
         this.gp += amount;
         this.writeToDB(false);
         this.guildMessage(MaplePacketCreator.updateGP(this.id, this.gp));
-		this.guildMessage(MaplePacketCreator.getGPMessage(amount));
-    }
-    
-    public void removeGP(int amount){
-        this.gp -= amount;
-        this.writeToDB(false);
-        this.guildMessage(MaplePacketCreator.updateGP(this.id, this.gp));
     }
 
     public static MapleGuildResponse sendInvite(MapleClient c, String targetName) {
@@ -525,7 +515,7 @@ public class MapleGuild {
     public static void displayGuildRanks(MapleClient c, int npcid) {
         try {
             ResultSet rs;
-            try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("SELECT `name`, `GP`, `logoBG`, `logoBGColor`, `logo`, `logoColor` FROM guilds WHERE NOT `guildid` = '1' ORDER BY `GP` DESC LIMIT 50")) {
+            try (PreparedStatement ps = DatabaseConnection.getConnection().prepareStatement("SELECT `name`, `GP`, `logoBG`, `logoBGColor`, " + "`logo`, `logoColor` FROM guilds ORDER BY `GP` DESC LIMIT 50")) {
                 rs = ps.executeQuery();
                 c.announce(MaplePacketCreator.showGuildRanks(npcid, rs));
             }

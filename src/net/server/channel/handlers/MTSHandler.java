@@ -21,17 +21,19 @@
  */
 package net.server.channel.handlers;
 
+import client.MapleCharacter;
+import client.MapleClient;
+import client.inventory.Equip;
+import client.inventory.Item;
+import client.inventory.MapleInventoryType;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-
+import java.util.*;
 import net.AbstractMaplePacketHandler;
-import net.server.Server;
 import net.server.channel.Channel;
+import net.server.Server;
 import server.MTSItemInfo;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
@@ -39,11 +41,6 @@ import tools.DatabaseConnection;
 import tools.MaplePacketCreator;
 import tools.Pair;
 import tools.data.input.SeekableLittleEndianAccessor;
-import client.MapleCharacter;
-import client.MapleClient;
-import client.inventory.Equip;
-import client.inventory.Item;
-import client.inventory.MapleInventoryType;
 
 public final class MTSHandler extends AbstractMaplePacketHandler {
 
@@ -71,15 +68,15 @@ public final class MTSHandler extends AbstractMaplePacketHandler {
                 } else {
                     slea.readShort();
                 }
-                short slot;
+                byte slot;
                 short quantity;
                 if (itemtype != 1) {
                     if (itemid / 10000 == 207 || itemid / 10000 == 233) {
                         slea.skip(8);
                     }
-                    slot = (short) slea.readInt();
+                    slot = (byte) slea.readInt();
                 } else {
-                    slot = (short) slea.readInt();
+                    slot = (byte) slea.readInt();
                 }
                 if (itemtype != 1) {
                     if (itemid / 10000 == 207 || itemid / 10000 == 233) {
@@ -284,7 +281,7 @@ public final class MTSHandler extends AbstractMaplePacketHandler {
                     if (rs.next()) {
                         Item i;
                         if (rs.getInt("type") != 1) {
-                            Item ii = new Item(rs.getInt("itemid"), (short) 0, (short) rs.getInt("quantity"));
+                            Item ii = new Item(rs.getInt("itemid"), (byte) 0, (short) rs.getInt("quantity"));
                             ii.setOwner(rs.getString("owner"));
                             ii.setPosition(c.getPlayer().getInventory(MapleItemInformationProvider.getInstance().getInventoryType(rs.getInt("itemid"))).getNextFreeSlot());
                             i = ii.copy();
@@ -571,7 +568,7 @@ public final class MTSHandler extends AbstractMaplePacketHandler {
                     ResultSet rse = pse.executeQuery();
                     if (rse.next()) {
                         if (rse.getInt("type") != 1) {
-                            Item i = new Item(rse.getInt("itemid"), (short) 0, (short) rse.getInt("quantity"));
+                            Item i = new Item(rse.getInt("itemid"), (byte) 0, (short) rse.getInt("quantity"));
                             i.setOwner(rse.getString("owner"));
                             items.add(new MTSItemInfo((Item) i, rse.getInt("price"), rse.getInt("id"), rse.getInt("seller"), rse.getString("sellername"), rse.getString("sell_ends")));
                         } else {
@@ -631,7 +628,7 @@ public final class MTSHandler extends AbstractMaplePacketHandler {
             rs = ps.executeQuery();
             while (rs.next()) {
                 if (rs.getInt("type") != 1) {
-                    Item i = new Item(rs.getInt("itemid"), (short) 0, (short) rs.getInt("quantity"));
+                    Item i = new Item(rs.getInt("itemid"), (byte) 0, (short) rs.getInt("quantity"));
                     i.setOwner(rs.getString("owner"));
                     items.add(new MTSItemInfo((Item) i, rs.getInt("price"), rs.getInt("id"), rs.getInt("seller"), rs.getString("sellername"), rs.getString("sell_ends")));
                 } else {
@@ -689,7 +686,7 @@ public final class MTSHandler extends AbstractMaplePacketHandler {
             rs = ps.executeQuery();
             while (rs.next()) {
                 if (rs.getInt("type") != 1) {
-                    Item i = new Item(rs.getInt("itemid"), (short) 0, (short) rs.getInt("quantity"));
+                    Item i = new Item(rs.getInt("itemid"), (byte) 0, (short) rs.getInt("quantity"));
                     i.setOwner(rs.getString("owner"));
                     items.add(new MTSItemInfo((Item) i, rs.getInt("price"), rs.getInt("id"), rs.getInt("seller"), rs.getString("sellername"), rs.getString("sell_ends")));
                 } else {
@@ -780,7 +777,7 @@ public final class MTSHandler extends AbstractMaplePacketHandler {
             rs = ps.executeQuery();
             while (rs.next()) {
                 if (rs.getInt("type") != 1) {
-                    Item i = new Item(rs.getInt("itemid"), (short) 0, (short) rs.getInt("quantity"));
+                    Item i = new Item(rs.getInt("itemid"), (byte) 0, (short) rs.getInt("quantity"));
                     i.setOwner(rs.getString("owner"));
                     items.add(new MTSItemInfo((Item) i, rs.getInt("price"), rs.getInt("id"), rs.getInt("seller"), rs.getString("sellername"), rs.getString("sell_ends")));
                 } else {

@@ -41,7 +41,7 @@ public final class PetAutoPotHandler extends AbstractMaplePacketHandler {
         slea.readByte();
         slea.readLong();
         slea.readInt();
-        short slot = slea.readShort();
+        byte slot = (byte) slea.readShort();
         int itemId = slea.readInt();
         Item toUse = c.getPlayer().getInventory(MapleInventoryType.USE).getItem(slot);
         if (toUse != null && toUse.getQuantity() > 0) {
@@ -52,6 +52,12 @@ public final class PetAutoPotHandler extends AbstractMaplePacketHandler {
             MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, slot, (short) 1, false);
             MapleStatEffect stat = MapleItemInformationProvider.getInstance().getItemEffect(toUse.getItemId());
             stat.applyTo(c.getPlayer());
+            if (stat.getMp() > 0) {
+                c.announce(MaplePacketCreator.sendAutoMpPot(itemId));
+            }
+            if (stat.getHp() > 0) {
+                c.announce(MaplePacketCreator.sendAutoHpPot(itemId));
+            }
         }
     }
 }

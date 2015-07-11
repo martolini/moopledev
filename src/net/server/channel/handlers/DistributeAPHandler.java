@@ -25,13 +25,6 @@ import client.MapleCharacter;
 import client.MapleClient;
 import client.MapleJob;
 import client.MapleStat;
-import client.Skill;
-import client.SkillFactory;
-import constants.skills.BlazeWizard;
-import constants.skills.Brawler;
-import constants.skills.DawnWarrior;
-import constants.skills.Magician;
-import constants.skills.Warrior;
 import net.AbstractMaplePacketHandler;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
@@ -43,16 +36,16 @@ public final class DistributeAPHandler extends AbstractMaplePacketHandler {
         slea.readInt();
         int num = slea.readInt();
         if (c.getPlayer().getRemainingAp() > 0) {
-            if (addStat(c, num)) { 
+            if (addStat(c, num)) {
                 c.getPlayer().setRemainingAp(c.getPlayer().getRemainingAp() - 1);
                 c.getPlayer().updateSingleStat(MapleStat.AVAILABLEAP, c.getPlayer().getRemainingAp());
             }
         }
         c.announce(MaplePacketCreator.enableActions());
     }
-    
-    static boolean addStat(MapleClient c, int apTo) {
-        switch (apTo) {
+
+    static boolean addStat(MapleClient c, int id) {
+        switch (id) {
             case 64: // Str
                 if (c.getPlayer().getStr() >= max) {
                     return false;
@@ -84,7 +77,7 @@ public final class DistributeAPHandler extends AbstractMaplePacketHandler {
                 addMP(c.getPlayer(), addMP(c));
                 break;
             default:
-                c.announce(MaplePacketCreator.updatePlayerStats(MaplePacketCreator.EMPTY_STATUPDATE, true, c.getPlayer()));
+                c.announce(MaplePacketCreator.updatePlayerStats(MaplePacketCreator.EMPTY_STATUPDATE, true));
                 return false;
         }
         return true;
@@ -98,24 +91,12 @@ public final class DistributeAPHandler extends AbstractMaplePacketHandler {
             return MaxHP;
         }
         if (job.isA(MapleJob.WARRIOR) || job.isA(MapleJob.DAWNWARRIOR1) || job.isA(MapleJob.ARAN1)) {
-            Skill increaseHP = SkillFactory.getSkill(job.isA(MapleJob.DAWNWARRIOR1) ? DawnWarrior.MAX_HP_INCREASE : Warrior.IMPROVED_MAXHP);
-            int sLvl = player.getSkillLevel(increaseHP);
-            
-            if(sLvl > 0)
-                MaxHP += increaseHP.getEffect(sLvl).getY();
-            
             MaxHP += 20;
         } else if (job.isA(MapleJob.MAGICIAN) || job.isA(MapleJob.BLAZEWIZARD1)) {
             MaxHP += 6;
         } else if (job.isA(MapleJob.BOWMAN) || job.isA(MapleJob.WINDARCHER1) || job.isA(MapleJob.THIEF) || job.isA(MapleJob.NIGHTWALKER1)) {
             MaxHP += 16;
         } else if (job.isA(MapleJob.PIRATE) || job.isA(MapleJob.THUNDERBREAKER1)) {
-            Skill increaseHP = SkillFactory.getSkill(Brawler.IMPROVE_MAX_HP);
-            int sLvl = player.getSkillLevel(increaseHP);
-            
-            if(sLvl > 0)
-                MaxHP += increaseHP.getEffect(sLvl).getY();
-            
             MaxHP += 18;
         } else {
             MaxHP += 8;
@@ -133,12 +114,6 @@ public final class DistributeAPHandler extends AbstractMaplePacketHandler {
         if (job.isA(MapleJob.WARRIOR) || job.isA(MapleJob.DAWNWARRIOR1) || job.isA(MapleJob.ARAN1)) {
             MaxMP += 2;
         } else if (job.isA(MapleJob.MAGICIAN) || job.isA(MapleJob.BLAZEWIZARD1)) {
-            Skill increaseMP = SkillFactory.getSkill(job.isA(MapleJob.BLAZEWIZARD1) ? BlazeWizard.INCREASING_MAX_MP : Magician.IMPROVED_MAX_MP_INCREASE);
-            int sLvl = player.getSkillLevel(increaseMP);
-            
-            if(sLvl > 0)
-                MaxMP += increaseMP.getEffect(sLvl).getY();
-            
             MaxMP += 18;
         } else if (job.isA(MapleJob.BOWMAN) || job.isA(MapleJob.WINDARCHER1) || job.isA(MapleJob.THIEF) || job.isA(MapleJob.NIGHTWALKER1)) {
             MaxMP += 10;

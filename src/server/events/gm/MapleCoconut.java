@@ -23,7 +23,6 @@
 package server.events.gm;
 
 import client.MapleCharacter;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import server.TimerManager;
@@ -63,7 +62,7 @@ public class MapleCoconut extends MapleEvent {
             public void run() {
                 if (map.getId() == 109080000) {
                     if (getMapleScore() == getStoryScore()) {
-						bonusTime();
+                    bonusTime();
                     } else if (getMapleScore() > getStoryScore()) {
                         for (MapleCharacter chr : map.getCharacters()) {
                             if (chr.getTeam() == 0) {
@@ -136,16 +135,14 @@ public class MapleCoconut extends MapleEvent {
         TimerManager.getInstance().schedule(new Runnable() {
             @Override
             public void run() {
-				List<MapleCharacter> chars = new ArrayList<>(map.getCharacters());
-				
-				for (MapleCharacter chr : chars) {
-					if ((getMapleScore() > getStoryScore() && chr.getTeam() == 0) || (getStoryScore() > getMapleScore() && chr.getTeam() == 1)) {
-						chr.changeMap(109050000);
-					} else {
-						chr.changeMap(109050001);
-					}
-				}
-				map.setCoconut(null);
+            for (MapleCharacter chr : map.getCharacters()) {
+                if ((getMapleScore() > getStoryScore() && chr.getTeam() == 0) || (getStoryScore() > getMapleScore() && chr.getTeam() == 1)) {
+                chr.changeMap(109050000);
+                } else {
+                chr.changeMap(109050001);
+                }
+            }
+            map.setCoconut(null);
             }
         }, 12000);
        }

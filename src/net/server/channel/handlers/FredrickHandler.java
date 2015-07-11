@@ -25,19 +25,14 @@ import client.MapleCharacter;
 import client.MapleClient;
 import client.inventory.Item;
 import client.inventory.ItemFactory;
-import client.inventory.MapleInventory;
 import client.inventory.MapleInventoryType;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
-
 import net.AbstractMaplePacketHandler;
 import server.MapleInventoryManipulator;
-import server.MapleItemInformationProvider;
 import tools.DatabaseConnection;
-import tools.FilePrinter;
 import tools.MaplePacketCreator;
 import tools.Pair;
 import tools.data.input.SeekableLittleEndianAccessor;
@@ -65,20 +60,14 @@ public class FredrickHandler extends AbstractMaplePacketHandler {
                         c.announce(MaplePacketCreator.fredrickMessage((byte) 0x21));
                         return;
                     }
+
                     chr.gainMeso(chr.getMerchantMeso(), false);
                     chr.setMerchantMeso(0);
                     if (deleteItems(chr)) {
-                        if(chr.getHiredMerchant() != null)
-                            chr.getHiredMerchant().clearItems();
-                        
                         for (int i = 0; i < items.size(); i++) {
-                        	Item item = items.get(i).getLeft();
-                            MapleInventoryManipulator.addFromDrop(c, item, false);
-                            String itemName = MapleItemInformationProvider.getInstance().getName(item.getItemId());
-        					FilePrinter.printError(FilePrinter.FREDRICK + chr.getName() + ".txt", chr.getName() + " gained " + item.getQuantity() + " " + itemName + " (" + item.getItemId() + ")\r\n");	        				
+                            MapleInventoryManipulator.addFromDrop(c, items.get(i).getLeft(), false);
                         }
                         c.announce(MaplePacketCreator.fredrickMessage((byte) 0x1E));
-                        
                     } else {
                         chr.message("An unknown error has occured.");
                     }
@@ -90,6 +79,7 @@ public class FredrickHandler extends AbstractMaplePacketHandler {
             case 0x1C: //Exit
                 break;
             default:
+
         }
     }
 
@@ -97,11 +87,12 @@ public class FredrickHandler extends AbstractMaplePacketHandler {
         if (chr.getMeso() + chr.getMerchantMeso() < 0) {
             return false;
         }
-        
-        if (!MapleInventory.checkSpots(chr, items)) {
-        	return false;
+        for (Pair<Item, MapleInventoryType> item : items) {
+            if (!MapleInventoryManipulator.checkSpace(chr.getClient(), item.getLeft().getItemId(), item.getLeft().getQuantity(), item.getLeft().getOwner())) {
+                return false;
+            }
         }
-        
+
         return true;
     }
 

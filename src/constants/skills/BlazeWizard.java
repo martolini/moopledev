@@ -39,5 +39,4 @@ public class BlazeWizard {
     public static final int SEAL = 12111002;
     public static final int SLOW = 12101001;
     public static final int SPELL_BOOSTER = 12101004;
-    public static final int FIRE_PILLAR = 12101006;
 }

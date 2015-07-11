@@ -29,18 +29,12 @@ import client.SkillFactory;
 import client.inventory.Item;
 import client.inventory.MapleInventoryType;
 import client.status.MonsterStatus;
-import client.status.MonsterStatusEffect;
-import constants.skills.Aran;
 import constants.skills.Corsair;
-
 import java.awt.Point;
-import java.util.Collections;
 import java.util.List;
-
 import net.AbstractMaplePacketHandler;
 import server.MapleInventoryManipulator;
 import server.MapleItemInformationProvider;
-import server.MapleStatEffect;
 import server.life.MapleLifeFactory.loseItem;
 import server.life.MapleMonster;
 import server.life.MobAttackInfo;
@@ -67,9 +61,9 @@ public final class TakeDamageHandler extends AbstractMaplePacketHandler {
         int mpattack = 0;
         MapleMonster attacker = null;
         final MapleMap map = player.getMap();
-        if (damagefrom != -3 && damagefrom != -4) {
-        	monsteridfrom = slea.readInt();
-	        oid = slea.readInt();
+        if (damagefrom != -3) {
+            monsteridfrom = slea.readInt();
+            oid = slea.readInt();
             attacker = (MapleMonster) map.getMapObject(oid);
             List<loseItem> loseItems;
             if (attacker != null) {
@@ -90,7 +84,7 @@ public final class TakeDamageHandler extends AbstractMaplePacketHandler {
                                     if (player.haveItem(loseItem.getId())) {
                                         pos.x = (int) (playerpos + ((d % 2 == 0) ? (25 * (d + 1) / 2) : -(25 * (d / 2))));
                                         MapleInventoryManipulator.removeById(c, type, loseItem.getId(), 1, false, false);
-                                        map.spawnItemDrop(c.getPlayer(), c.getPlayer(), new Item(loseItem.getId(), (short) 0, (short) 1), map.calcDropPos(pos, player.getPosition()), true, true);
+                                        map.spawnItemDrop(c.getPlayer(), c.getPlayer(), new Item(loseItem.getId(), (byte) 0, (short) 1), map.calcDropPos(pos, player.getPosition()), true, true);
                                         d++;
                                     } else {
                                         break;
@@ -104,40 +98,39 @@ public final class TakeDamageHandler extends AbstractMaplePacketHandler {
             } else {
                 return;
             }
+
             direction = slea.readByte();
         }
         if (damagefrom != -1 && damagefrom != -2 && attacker != null) {
             MobAttackInfo attackInfo = MobAttackInfoFactory.getMobAttackInfo(attacker, damagefrom);
-            if (attackInfo != null) {
-	            if (attackInfo.isDeadlyAttack()) {
-	                mpattack = player.getMp() - 1;
-	            }
-	            mpattack += attackInfo.getMpBurn();
-	            MobSkill skill = MobSkillFactory.getMobSkill(attackInfo.getDiseaseSkill(), attackInfo.getDiseaseLevel());
-	            if (skill != null && damage > 0) {
-	                skill.applyEffect(player, attacker, false);
-	            }
-	            if (attacker != null) {
-	                attacker.setMp(attacker.getMp() - attackInfo.getMpCon());
-	                if (player.getBuffedValue(MapleBuffStat.MANA_REFLECTION) != null && damage > 0 && !attacker.isBoss()) {
-	                    int jobid = player.getJob().getId();
-	                    if (jobid == 212 || jobid == 222 || jobid == 232) {
-	                        int id = jobid * 10000 + 1002;
-	                        Skill manaReflectSkill = SkillFactory.getSkill(id);
-	                        if (player.isBuffFrom(MapleBuffStat.MANA_REFLECTION, manaReflectSkill) && player.getSkillLevel(manaReflectSkill) > 0 && manaReflectSkill.getEffect(player.getSkillLevel(manaReflectSkill)).makeChanceResult()) {
-	                            int bouncedamage = (damage * manaReflectSkill.getEffect(player.getSkillLevel(manaReflectSkill)).getX() / 100);
-	                            if (bouncedamage > attacker.getMaxHp() / 5) {
-	                                bouncedamage = attacker.getMaxHp() / 5;
-	                            }
-	                            map.damageMonster(player, attacker, bouncedamage);
-	                            map.broadcastMessage(player, MaplePacketCreator.damageMonster(oid, bouncedamage), true);
-	                            player.getClient().announce(MaplePacketCreator.showOwnBuffEffect(id, 5));
-	                            map.broadcastMessage(player, MaplePacketCreator.showBuffeffect(player.getId(), id, 5), false);
-	                        }
-	                    }
-	                }
-	            }
-	        }
+            if (attackInfo.isDeadlyAttack()) {
+                mpattack = player.getMp() - 1;
+            }
+            mpattack += attackInfo.getMpBurn();
+            MobSkill skill = MobSkillFactory.getMobSkill(attackInfo.getDiseaseSkill(), attackInfo.getDiseaseLevel());
+            if (skill != null && damage > 0) {
+                skill.applyEffect(player, attacker, false);
+            }
+            if (attacker != null) {
+                attacker.setMp(attacker.getMp() - attackInfo.getMpCon());
+                if (player.getBuffedValue(MapleBuffStat.MANA_REFLECTION) != null && damage > 0 && !attacker.isBoss()) {
+                    int jobid = player.getJob().getId();
+                    if (jobid == 212 || jobid == 222 || jobid == 232) {
+                        int id = jobid * 10000 + 2;
+                        Skill manaReflectSkill = SkillFactory.getSkill(id);
+                        if (player.isBuffFrom(MapleBuffStat.MANA_REFLECTION, manaReflectSkill) && player.getSkillLevel(manaReflectSkill) > 0 && manaReflectSkill.getEffect(player.getSkillLevel(manaReflectSkill)).makeChanceResult()) {
+                            int bouncedamage = (damage * manaReflectSkill.getEffect(player.getSkillLevel(manaReflectSkill)).getX() / 100);
+                            if (bouncedamage > attacker.getMaxHp() / 5) {
+                                bouncedamage = attacker.getMaxHp() / 5;
+                            }
+                            map.damageMonster(player, attacker, bouncedamage);
+                            map.broadcastMessage(player, MaplePacketCreator.damageMonster(oid, bouncedamage), true);
+                            player.getClient().announce(MaplePacketCreator.showOwnBuffEffect(id, 5));
+                            map.broadcastMessage(player, MaplePacketCreator.showBuffeffect(player.getId(), id, 5), false);
+                        }
+                    }
+                }
+            }
         }
         if (damage == -1) {
             fake = 4020002 + (player.getJob().getId() / 10 - 40) * 100000;
@@ -148,33 +141,26 @@ public final class TakeDamageHandler extends AbstractMaplePacketHandler {
             player.getAutobanManager().resetMisses();
         }
         if (damage > 0 && !player.isHidden()) {
-            if (attacker != null && damagefrom == -1 && player.getBuffedValue(MapleBuffStat.POWERGUARD) != null) { // PG works on bosses, but only at half of the rate.
-                int bouncedamage = (int) (damage * (player.getBuffedValue(MapleBuffStat.POWERGUARD).doubleValue() / (attacker.isBoss() ? 200 : 100)));
-                bouncedamage = Math.min(bouncedamage, attacker.getMaxHp() / 10);
-                damage -= bouncedamage;
-                map.damageMonster(player, attacker, bouncedamage);
-                map.broadcastMessage(player, MaplePacketCreator.damageMonster(oid, bouncedamage), false, true);
-                player.checkMonsterAggro(attacker);
-            }
-            if (attacker != null && damagefrom == -1 && player.getBuffedValue(MapleBuffStat.BODY_PRESSURE) != null) {
-                Skill skill = SkillFactory.getSkill(Aran.BODY_PRESSURE);
-                final MapleStatEffect eff = skill.getEffect(player.getSkillLevel(skill));
-                if (!attacker.alreadyBuffedStats().contains(MonsterStatus.NEUTRALISE)) {
-                    if (!attacker.isBoss() && eff.makeChanceResult()) {
-                    	attacker.applyStatus(player, new MonsterStatusEffect(Collections.singletonMap(MonsterStatus.NEUTRALISE, 1), skill, null, false), false, (eff.getDuration()/10) * 2, false);
-                    }
+            if (attacker != null && !attacker.isBoss()) {
+                if (damagefrom == -1 && player.getBuffedValue(MapleBuffStat.POWERGUARD) != null) {
+                    int bouncedamage = (int) (damage * (player.getBuffedValue(MapleBuffStat.POWERGUARD).doubleValue() / 100));
+                    bouncedamage = Math.min(bouncedamage, attacker.getMaxHp() / 10);
+                    map.damageMonster(player, attacker, bouncedamage);
+                    damage -= bouncedamage;
+                    map.broadcastMessage(player, MaplePacketCreator.damageMonster(oid, bouncedamage), false, true);
+                    player.checkMonsterAggro(attacker);
                 }
             }
-            if (damagefrom != -3 && damagefrom != -4) {
+            if (damagefrom != -3) {
                 int achilles = 0;
                 Skill achilles1 = null;
                 int jobid = player.getJob().getId();
                 if (jobid < 200 && jobid % 10 == 2) {
-                    achilles1 = SkillFactory.getSkill(jobid * 10000 + (jobid == 112 ? 4 : 5));
-                    achilles = player.getSkillLevel(achilles1);
+                    achilles1 = SkillFactory.getSkill(jobid * 10000 + jobid == 112 ? 4 : 5);
+                    achilles = player.getSkillLevel(achilles);
                 }
                 if (achilles != 0 && achilles1 != null) {
-                    damage *= (achilles1.getEffect(achilles).getX() / 1000.0);
+                    damage *= (int) (achilles1.getEffect(achilles).getX() / 1000.0 * damage);
                 }
             }
             Integer mesoguard = player.getBuffedValue(MapleBuffStat.MESOGUARD);

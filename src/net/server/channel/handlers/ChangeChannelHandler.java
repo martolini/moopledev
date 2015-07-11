@@ -21,10 +21,19 @@
  */
 package net.server.channel.handlers;
 
-import net.AbstractMaplePacketHandler;
-import tools.data.input.SeekableLittleEndianAccessor;
+import client.MapleBuffStat;
+import client.MapleCharacter;
 import client.MapleClient;
-import client.autoban.AutobanFactory;
+import client.inventory.MapleInventoryType;
+import java.io.IOException;
+import java.net.InetAddress;
+import net.AbstractMaplePacketHandler;
+import net.server.Server;
+import server.MapleTrade;
+import server.maps.FieldLimit;
+import server.maps.HiredMerchant;
+import tools.MaplePacketCreator;
+import tools.data.input.SeekableLittleEndianAccessor;
 
 /**
  *
@@ -35,14 +44,48 @@ public final class ChangeChannelHandler extends AbstractMaplePacketHandler {
     @Override
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         int channel = slea.readByte() + 1;
-        c.getPlayer().getAutobanManager().setTimestamp(6, slea.readInt(), 2);
-        if(c.getChannel() == channel) {
-        	AutobanFactory.GENERAL.alert(c.getPlayer(), "CCing to same channel.");
+        MapleCharacter chr = c.getPlayer();
+        Server server = Server.getInstance();
+        if (chr.isBanned()) {
             c.disconnect(false, false);
             return;
-        } else if (c.getPlayer().getCashShop().isOpened() || c.getPlayer().getMiniGame() != null || c.getPlayer().getPlayerShop() != null) {
-    		return;
-    	}
-        c.changeChannel(channel);
+        }
+        if (!chr.isAlive() || FieldLimit.CHANGECHANNEL.check(chr.getMap().getFieldLimit())) {
+            c.announce(MaplePacketCreator.enableActions());
+            return;
+        }
+        String[] socket = Server.getInstance().getIP(c.getWorld(), channel).split(":");
+        if (chr.getTrade() != null) {
+            MapleTrade.cancelTrade(c.getPlayer());
+        }
+
+        HiredMerchant merchant = chr.getHiredMerchant();
+        if (merchant != null) {
+            if (merchant.isOwner(c.getPlayer())) {
+                merchant.setOpen(true);
+            } else {
+                merchant.removeVisitor(c.getPlayer());
+            }
+        }
+        server.getPlayerBuffStorage().addBuffsToStorage(chr.getId(), chr.getAllBuffs());
+        chr.cancelBuffEffects();
+        chr.cancelMagicDoor();
+        chr.saveCooldowns();
+        //Canceling mounts? Noty
+        if (chr.getBuffedValue(MapleBuffStat.PUPPET) != null) {
+            chr.cancelEffectFromBuffStat(MapleBuffStat.PUPPET);
+        }
+        if (chr.getBuffedValue(MapleBuffStat.COMBO) != null) {
+            chr.cancelEffectFromBuffStat(MapleBuffStat.COMBO);
+        }
+        chr.getInventory(MapleInventoryType.EQUIPPED).checked(false); //test
+        chr.getMap().removePlayer(chr);
+        chr.getClient().getChannelServer().removePlayer(chr);
+        chr.saveToDB();
+        chr.getClient().updateLoginState(MapleClient.LOGIN_SERVER_TRANSITION);
+        try {
+            c.announce(MaplePacketCreator.getChannelChange(InetAddress.getByName(socket[0]), Integer.parseInt(socket[1])));
+        } catch (IOException e) {
+        }
     }
 }

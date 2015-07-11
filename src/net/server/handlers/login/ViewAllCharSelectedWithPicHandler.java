@@ -1,16 +1,19 @@
 package net.server.handlers.login;
 
+import client.MapleClient;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
 import net.AbstractMaplePacketHandler;
 import net.server.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import tools.MaplePacketCreator;
 import tools.Randomizer;
 import tools.data.input.SeekableLittleEndianAccessor;
-import client.MapleClient;
 
 public class ViewAllCharSelectedWithPicHandler extends AbstractMaplePacketHandler {
+
+    private static Logger log = LoggerFactory.getLogger(ViewAllCharSelectedWithPicHandler.class);
 
     @Override
     public void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {

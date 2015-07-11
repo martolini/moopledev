@@ -22,9 +22,7 @@
 package net.server.channel.handlers;
 
 import client.MapleClient;
-import client.autoban.AutobanFactory;
 import net.AbstractMaplePacketHandler;
-import tools.FilePrinter;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
 
@@ -34,17 +32,7 @@ public final class PetChatHandler extends AbstractMaplePacketHandler {
         slea.readInt();
         slea.readByte();
         int act = slea.readByte();
-        byte pet = c.getPlayer().getPetIndex(petId);
-        if ((pet < 0 || pet > 3) || (act < 0 || act > 9)) {
-        	return;
-        }
         String text = slea.readMapleAsciiString();
-        if (text.length() > Byte.MAX_VALUE) {
-        	AutobanFactory.PACKET_EDIT.alert(c.getPlayer(), c.getPlayer().getName() + " tried to packet edit with pets.");
-        	FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " tried to send text with length of " + text.length() + "\r\n");
-        	c.disconnect(true, false);
-        	return;
-        }
-        c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.petChat(c.getPlayer().getId(), pet, act, text), true);
-    } 
+        c.getPlayer().getMap().broadcastMessage(c.getPlayer(), MaplePacketCreator.petChat(c.getPlayer().getId(), c.getPlayer().getPetIndex(petId), act, text), true);
+    }
 }

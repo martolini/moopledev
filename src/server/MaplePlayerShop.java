@@ -246,8 +246,8 @@ public class MaplePlayerShop extends AbstractMapleMapObject {
             if (visitors[i] != null && visitors[i].getName().equals(name)) {
                 visitors[i].getClient().announce(MaplePacketCreator.shopErrorMessage(5, 1));
                 removeVisitor(visitors[i]);
-                return; //I'm guessing this was the intended action
             }
+            return;
         }
     }
 

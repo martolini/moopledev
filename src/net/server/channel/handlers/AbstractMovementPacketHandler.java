@@ -24,16 +24,15 @@ package net.server.channel.handlers;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
-
 import net.AbstractMaplePacketHandler;
 import server.maps.AnimatedMapleMapObject;
 import server.movement.AbsoluteLifeMovement;
+import server.movement.ChairMovement;
 import server.movement.ChangeEquip;
 import server.movement.JumpDownMovement;
 import server.movement.LifeMovement;
 import server.movement.LifeMovementFragment;
 import server.movement.RelativeLifeMovement;
-import server.movement.TeleportMovement;
 import tools.data.input.LittleEndianAccessor;
 
 public abstract class AbstractMovementPacketHandler extends AbstractMaplePacketHandler {
@@ -65,11 +64,7 @@ public abstract class AbstractMovementPacketHandler extends AbstractMaplePacketH
                 case 6: // fj
                 case 12:
                 case 13: // Shot-jump-back thing
-                case 16: // Float
-				case 18:
-				case 19: // Springs on maps
-                case 20: // Aran Combat Step
-				case 22: {
+                case 16: { // Float
                     short xpos = lea.readShort();
                     short ypos = lea.readShort();
                     byte newstate = lea.readByte();
@@ -83,26 +78,25 @@ public abstract class AbstractMovementPacketHandler extends AbstractMaplePacketH
                 case 7: // assaulter
                 case 8: // assassinate
                 case 9: // rush
-				case 11: //chair
-                {
-//                case 14: {
-                    short xpos = lea.readShort();
-                    short ypos = lea.readShort();
-                    short xwobble = lea.readShort();
-                    short ywobble = lea.readShort();
-                    byte newstate = lea.readByte();
-                    TeleportMovement tm = new TeleportMovement(command, new Point(xpos, ypos), newstate);
-                    tm.setPixelsPerSecond(new Point(xwobble, ywobble));
-                    res.add(tm);
+                case 14: { // Before Jump Down - fixes item/mobs dissappears
+                    lea.skip(9);
                     break;
+                    /*case 14: {
+                     short xpos = lea.readShort();
+                     short ypos = lea.readShort();
+                     short xwobble = lea.readShort();
+                     short ywobble = lea.readShort();
+                     byte newstate = lea.readByte();
+                     TeleportMovement tm = new TeleportMovement(command, new Point(xpos, ypos), newstate);
+                     tm.setPixelsPerSecond(new Point(xwobble, ywobble));
+                     res.add(tm);
+                     break;
+                     } */
                 }
-                case 14:
-                    lea.skip(9); // jump down (?)
-                    break;
                 case 10: // Change Equip
                     res.add(new ChangeEquip(lea.readByte()));
                     break;
-                /*case 11: { // Chair
+                case 11: { // Chair
                     short xpos = lea.readShort();
                     short ypos = lea.readShort();
                     short unk = lea.readShort();
@@ -112,7 +106,7 @@ public abstract class AbstractMovementPacketHandler extends AbstractMaplePacketH
                     cm.setUnk(unk);
                     res.add(cm);
                     break;
-                }*/
+                }
                 case 15: {
                     short xpos = lea.readShort();
                     short ypos = lea.readShort();
@@ -138,7 +132,6 @@ public abstract class AbstractMovementPacketHandler extends AbstractMaplePacketH
                     break;
                 }
                 default:
-					System.out.println("Unhandled Case:" + command);
                     return null;
             }
         }

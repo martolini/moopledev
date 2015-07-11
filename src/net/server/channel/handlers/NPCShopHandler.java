@@ -22,10 +22,8 @@
 package net.server.channel.handlers;
 
 import client.MapleClient;
-import client.autoban.AutobanFactory;
 import net.AbstractMaplePacketHandler;
 import server.MapleItemInformationProvider;
-import tools.FilePrinter;
 import tools.data.input.SeekableLittleEndianAccessor;
 
 /**
@@ -39,12 +37,6 @@ public final class NPCShopHandler extends AbstractMaplePacketHandler {
             short slot = slea.readShort();// slot
             int itemId = slea.readInt();
             short quantity = slea.readShort();
-            if (quantity < 1) {
-            	AutobanFactory.PACKET_EDIT.alert(c.getPlayer(), c.getPlayer().getName() + " tried to packet edit a npc shop.");
-            	FilePrinter.printError(FilePrinter.EXPLOITS + c.getPlayer().getName() + ".txt", c.getPlayer().getName() + " tried to buy quantity " + quantity + " of item id " + itemId + "\r\n");
-            	c.disconnect(true, false);
-            	return;
-            }
             c.getPlayer().getShop().buy(c, slot, itemId, quantity);
         } else if (bmode == 1) { // sell ;)
             short slot = slea.readShort();
@@ -54,7 +46,8 @@ public final class NPCShopHandler extends AbstractMaplePacketHandler {
         } else if (bmode == 2) { // recharge ;)
             byte slot = (byte) slea.readShort();
             c.getPlayer().getShop().recharge(c, slot);
-        } else if (bmode == 3) { // leaving :(
+        } else if (bmode == 3) // leaving :(
+        {
             c.getPlayer().setShop(null);
         }
     }

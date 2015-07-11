@@ -56,18 +56,15 @@ public final class QuestActionHandler extends AbstractMaplePacketHandler {
         } else if (action == 3) {// forfeit quest
             quest.forfeit(player);
         } else if (action == 4) { // scripted start quest
+            //System.out.println(slea.toString());
             int npc = slea.readInt();
             slea.readInt();
-			if(quest.canStart(player, npc)) {
-				QuestScriptManager.getInstance().start(c, questid, npc);
-			}
+            QuestScriptManager.getInstance().start(c, questid, npc);
         } else if (action == 5) { // scripted end quests
             //System.out.println(slea.toString());
             int npc = slea.readInt();
             slea.readInt();
-			if(quest.canComplete(player, npc)) {
-				QuestScriptManager.getInstance().end(c, questid, npc);
-			}
+            QuestScriptManager.getInstance().end(c, questid, npc);
         }
     }
 }

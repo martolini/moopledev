@@ -45,7 +45,7 @@ public final class PetFoodHandler extends AbstractMaplePacketHandler {
             return;
         }
         abm.spam(2);
-        abm.setTimestamp(1, slea.readInt(), 3);
+        abm.setTimestamp(1, slea.readInt());
         if (chr.getNoPets() == 0) {
             c.announce(MaplePacketCreator.enableActions());
             return;
@@ -62,7 +62,7 @@ public final class PetFoodHandler extends AbstractMaplePacketHandler {
             }
         }
         MaplePet pet = chr.getPet(slot);
-        short pos = slea.readShort();
+        byte pos = (byte) slea.readShort();
         int itemId = slea.readInt();
         Item use = chr.getInventory(MapleInventoryType.USE).getItem(pos);
         if (use == null || (itemId / 10000) != 212 || use.getItemId() != itemId) {
@@ -90,7 +90,7 @@ public final class PetFoodHandler extends AbstractMaplePacketHandler {
                     chr.getMap().broadcastMessage(MaplePacketCreator.showPetLevelUp(c.getPlayer(), chr.getPetIndex(pet)));
                 }
             }
-            chr.getMap().broadcastMessage(MaplePacketCreator.commandResponse(chr.getId(), slot, 0, true));
+            chr.getMap().broadcastMessage(MaplePacketCreator.commandResponse(chr.getId(), slot, 1, true));
         } else {
             if (gainCloseness) {
                 int newCloseness = pet.getCloseness() - 1;
@@ -105,14 +105,7 @@ public final class PetFoodHandler extends AbstractMaplePacketHandler {
             chr.getMap().broadcastMessage(MaplePacketCreator.commandResponse(chr.getId(), slot, 0, false));
         }
         MapleInventoryManipulator.removeFromSlot(c, MapleInventoryType.USE, pos, (short) 1, false);
-        
-        pet.saveToDb();
-        
         Item petz = chr.getInventory(MapleInventoryType.CASH).getItem(pet.getPosition());
-        if (petz == null){ //Not a real fix but fuck it you know?
-        	return;
-        }
-        
         chr.forceUpdateItem(petz);
     }
 }

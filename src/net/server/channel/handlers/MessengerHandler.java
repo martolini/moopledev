@@ -42,7 +42,7 @@ public final class MessengerHandler extends AbstractMaplePacketHandler {
                 if (messenger == null) {
                     int messengerid = slea.readInt();
                     if (messengerid == 0) {
-                        MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(player, 0);
+                        MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(player);
                         messenger = world.createMessenger(messengerplayer);
                         player.setMessenger(messenger);
                         player.setMessengerPosition(0);
@@ -60,7 +60,7 @@ public final class MessengerHandler extends AbstractMaplePacketHandler {
                 break;
             case 0x02:
                 if (messenger != null) {
-                    MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(player, player.getMessengerPosition());
+                    MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(player);
                     world.leaveMessenger(messenger.getId(), messengerplayer);
                     player.setMessenger(null);
                     player.setMessengerPosition(4);
@@ -101,7 +101,7 @@ public final class MessengerHandler extends AbstractMaplePacketHandler {
                 break;
             case 0x06:
                 if (messenger != null) {
-                    MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(player, player.getMessengerPosition());
+                    MapleMessengerCharacter messengerplayer = new MapleMessengerCharacter(player);
                     input = slea.readMapleAsciiString();
                     world.messengerChat(messenger, input, messengerplayer.getName());
                 }

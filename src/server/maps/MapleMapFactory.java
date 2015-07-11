@@ -75,13 +75,8 @@ public class MapleMapFactory {
                     monsterRate = ((Float) mobRate.getData()).floatValue();
                 }
                 map = new MapleMap(mapid, world, channel, MapleDataTool.getInt("info/returnMap", mapData), monsterRate);
-                
-                String onFirstEnter = MapleDataTool.getString(mapData.getChildByPath("info/onFirstUserEnter"), String.valueOf(mapid));
-                map.setOnFirstUserEnter(onFirstEnter.equals("") ? String.valueOf(mapid) : onFirstEnter);
-                
-                String onEnter = MapleDataTool.getString(mapData.getChildByPath("info/onUserEnter"), String.valueOf(mapid));
-                map.setOnUserEnter(onEnter.equals("") ? String.valueOf(mapid) : onEnter);
-                
+                map.setOnFirstUserEnter(MapleDataTool.getString(mapData.getChildByPath("info/onFirstUserEnter"), String.valueOf(mapid)));
+                map.setOnUserEnter(MapleDataTool.getString(mapData.getChildByPath("info/onUserEnter"), String.valueOf(mapid)));
                 map.setFieldLimit(MapleDataTool.getInt(mapData.getChildByPath("info/fieldLimit"), 0));
                 map.setMobInterval((short) MapleDataTool.getInt(mapData.getChildByPath("info/createMobInterval"), 5000));
                 PortalFactory portalFactory = new PortalFactory();
@@ -186,28 +181,14 @@ public class MapleMapFactory {
 
                 map.setClock(mapData.getChildByPath("clock") != null);
                 map.setEverlast(mapData.getChildByPath("everlast") != null);
-                map.setTown(mapData.getChildByPath("info/town") != null);
-                map.setHPDec(MapleDataTool.getIntConvert("info/decHP", mapData, 0));
-                map.setHPDecProtect(MapleDataTool.getIntConvert("info/protectItem", mapData, 0));
+                map.setTown(mapData.getChildByPath("town") != null);
+                map.setHPDec(MapleDataTool.getIntConvert("decHP", mapData, 0));
+                map.setHPDecProtect(MapleDataTool.getIntConvert("protectItem", mapData, 0));
                 map.setForcedReturnMap(MapleDataTool.getInt(mapData.getChildByPath("info/forcedReturn"), 999999999));
                 map.setBoat(mapData.getChildByPath("shipObj") != null);
                 map.setTimeLimit(MapleDataTool.getIntConvert("timeLimit", mapData.getChildByPath("info"), -1));
                 map.setFieldType(MapleDataTool.getIntConvert("info/fieldType", mapData, 0));
                 map.setMobCapacity(MapleDataTool.getIntConvert("fixedMobCapacity", mapData.getChildByPath("info"), 500));//Is there a map that contains more than 500 mobs?
-                
-                HashMap<Integer, Integer> backTypes = new HashMap<>();
-                try {
-                    for (MapleData layer : mapData.getChildByPath("back")) { // yolo
-                        int layerNum = Integer.parseInt(layer.getName());
-                        int type = MapleDataTool.getInt(layer.getChildByPath("type"), 0);
-                        
-                        backTypes.put(layerNum, type);
-                    }
-                } catch (Exception e) {
-                    // swallow cause I'm cool
-                }
-                map.setBackgroundTypes(backTypes);
-                
                 maps.put(omapid, map);
             }
         }
@@ -269,7 +250,7 @@ public class MapleMapFactory {
             builder.append("victoria");
         } else if (mapid >= 200000000 && mapid < 300000000) {
             builder.append("ossyria");
-        } else if (mapid >= 540000000 && mapid < 551030200) {
+        } else if (mapid >= 540000000 && mapid < 541010110) {
             builder.append("singapore");
         } else if (mapid >= 600000000 && mapid < 620000000) {
             builder.append("MasteriaGL");

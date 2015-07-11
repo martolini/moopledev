@@ -58,6 +58,10 @@ public class BuddylistEntry {
         return channel >= 0;
     }
 
+    public void setOffline() {
+        channel = -1;
+    }
+
     public String getName() {
         return name;
     }

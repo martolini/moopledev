@@ -1,13 +1,12 @@
 package net.server.handlers.login;
 
+import client.MapleClient;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-
 import net.AbstractMaplePacketHandler;
 import net.server.Server;
 import tools.MaplePacketCreator;
 import tools.data.input.SeekableLittleEndianAccessor;
-import client.MapleClient;
 
 public class CharSelectedWithPicHandler extends AbstractMaplePacketHandler {
 
@@ -17,11 +16,9 @@ public class CharSelectedWithPicHandler extends AbstractMaplePacketHandler {
         String pic = slea.readMapleAsciiString();
         int charId = slea.readInt();
         String macs = slea.readMapleAsciiString();
-		String hwid = slea.readMapleAsciiString();
         c.updateMacs(macs);
-		c.updateHWID(hwid);
 
-        if (c.hasBannedMac() || c.hasBannedHWID()) {
+        if (c.hasBannedMac()) {
             c.getSession().close(true);
             return;
         }

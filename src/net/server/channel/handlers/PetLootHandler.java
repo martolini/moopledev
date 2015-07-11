@@ -43,14 +43,12 @@ public final class PetLootHandler extends AbstractMaplePacketHandler {
     public final void handlePacket(SeekableLittleEndianAccessor slea, MapleClient c) {
         MapleCharacter chr = c.getPlayer();
         MaplePet pet = chr.getPet(chr.getPetIndex(slea.readInt()));//why would it be an int...?
-        if (pet == null || !pet.isSummoned()) {
-        	return;
-        }
+        if (!pet.isSummoned()) return;
         
         slea.skip(13);
         int oid = slea.readInt();
         MapleMapObject ob = chr.getMap().getMapObject(oid);
-        if (ob == null) {
+        if (ob == null || pet == null) {
             c.announce(MaplePacketCreator.getInventoryFull());
             return;
         }
@@ -62,10 +60,6 @@ public final class PetLootHandler extends AbstractMaplePacketHandler {
                     c.announce(MaplePacketCreator.enableActions());
                     return;
                 }
-				if(System.currentTimeMillis() - mapitem.getDropTime() < 900) {
-					c.announce(MaplePacketCreator.enableActions());
-					return;
-				} 
                 if (mapitem.isPickedUp()) {
                     c.announce(MaplePacketCreator.getInventoryFull());
                     return;
@@ -134,15 +128,10 @@ public final class PetLootHandler extends AbstractMaplePacketHandler {
                     }
                     chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 5, chr.getId(), true, chr.getPetIndex(pet)), mapitem.getPosition());
                     chr.getMap().removeMapObject(ob);
-				} else if(mapitem.getItemId() == 4031865 || mapitem.getItemId() == 4031866) {
-                    // Add NX to account, show effect and make item disapear
-                    chr.getCashShop().gainCash(1, mapitem.getItemId() == 4031865 ? 100 : 250);
-                    chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 5, chr.getId(), true, chr.getPetIndex(pet)), mapitem.getPosition());
-                    chr.getMap().removeMapObject(ob);
                 } else if (MapleInventoryManipulator.addFromDrop(c, mapitem.getItem(), true)) {
                     chr.getMap().broadcastMessage(MaplePacketCreator.removeItemFromMap(mapitem.getObjectId(), 5, chr.getId(), true, chr.getPetIndex(pet)), mapitem.getPosition());
                     chr.getMap().removeMapObject(ob);
-				} else {
+                } else {
                     return;
                 }
                 mapitem.setPickedUp(true);

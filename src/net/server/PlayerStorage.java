@@ -87,17 +87,13 @@ public class PlayerStorage {
     public final void disconnectAll() {
 	wlock.lock();
 	try {	    
-        final Iterator<MapleCharacter> chrit = storage.values().iterator();
+            final Iterator<MapleCharacter> chrit = storage.values().iterator();
 	    while (chrit.hasNext()) {
-	    		chrit.next().getClient().disconnect(true, false);
+                chrit.next().getClient().disconnect(true, false);
                 chrit.remove();
             }
 	} finally {
 	    wlock.unlock();
 	}
-    }
-    
-    public int getSize(){
-    	return storage.size();
     }
 }

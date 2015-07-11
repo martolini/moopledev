@@ -27,43 +27,44 @@ import java.util.Collections;
 import java.util.List;
 
 public final class MapleMessenger {
-	
-    private int id;
     private List<MapleMessengerCharacter> members = new ArrayList<MapleMessengerCharacter>(3);
+    private int id;
     private boolean[] pos = new boolean[3];
 
     public MapleMessenger(int id, MapleMessengerCharacter chrfor) {
-        this.id = id;  
-    	for (int i = 0; i < 3; i++){
-    		pos[i] = false;
-    	}
-        addMember(chrfor, chrfor.getPosition());
+        this.members.add(chrfor);
+        chrfor.setPosition(getLowestPosition());
+        this.id = id;
     }
-    
-    public int getId() {
-        return id;
-    }
-    
-    public Collection<MapleMessengerCharacter> getMembers() {
-        return Collections.unmodifiableList(members);
-    }
-    
-    public void addMember(MapleMessengerCharacter member, int position) {
+
+    public void addMember(MapleMessengerCharacter member) {
         members.add(member);
-        member.setPosition(position);
-        pos[position] = true;
+        member.setPosition(getLowestPosition());
     }
 
     public void removeMember(MapleMessengerCharacter member) {
-    	int position = member.getPosition();
-        pos[position] = false;
+        pos[member.getPosition()] = true;
         members.remove(member);
     }
 
-    public int getLowestPosition() {
-        for (byte i = 0; i < 3; i++) {
-            if (!pos[i]) {
-                return i;
+    public void silentRemoveMember(MapleMessengerCharacter member) {
+        members.remove(member);
+    }
+
+    public void silentAddMember(MapleMessengerCharacter member, int position) {
+        members.add(member);
+        member.setPosition(position);
+    }
+
+    public Collection<MapleMessengerCharacter> getMembers() {
+        return Collections.unmodifiableList(members);
+    }
+
+    public int getLowestPosition() {// (:
+        for (byte b = 0; b < 3; b++) {
+            if (pos[b]) {
+                pos[b] = false;
+                return b;
             }
         }
         return -1;
@@ -75,7 +76,11 @@ public final class MapleMessenger {
                 return messengerchar.getPosition();
             }
         }
-        return -1;
+        return 4;
+    }
+
+    public int getId() {
+        return id;
     }
 }
 

@@ -24,8 +24,6 @@ package server.events.gm;
 import client.MapleCharacter;
 import tools.Randomizer;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import provider.MapleDataProvider;
 import provider.MapleDataProviderFactory;
 import provider.MapleDataTool;
@@ -73,9 +71,7 @@ public final class MapleOxQuiz {
             @Override
             public void run() {
                 map.broadcastMessage(MaplePacketCreator.showOXQuiz(round, question, true));
-				List<MapleCharacter> chars = new ArrayList<>(map.getCharacters());
-				
-                for (MapleCharacter chr : chars) {
+                for (MapleCharacter chr : map.getCharacters()) {
                     if (chr != null) // make sure they aren't null... maybe something can happen in 12 seconds.
                     {
                         if (!isCorrectAnswer(chr, getOXAnswer(round, question)) && !chr.isGM()) {
@@ -92,7 +88,7 @@ public final class MapleOxQuiz {
                     question++;
                 }
                 //send question
-                if (map.getCharacters().size() - number <= 2) {
+                if (map.getCharacters().size() - number <= 1) {
                     map.broadcastMessage(MaplePacketCreator.serverNotice(6, "The event has ended"));
                     map.getPortal("join00").setPortalStatus(true);
                     map.setOx(null);
